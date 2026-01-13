@@ -2,10 +2,10 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Bloxluck | Compact & Professional</title>
+<title>Bloxluck | Coin Flip Edition</title>
 <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
 <style>
-:root{--bg:#0d0f13;--panel:#15181f;--card:#1c2028;--border:#262a33;--green:#2ecc71;--red:#e74c3c;--gray:#8a9199;--gold:#f1c40f}
+:root{--bg:#0d0f13;--panel:#15181f;--card:#1c2028;--border:#262a33;--green:#2ecc71;--red:#e74c3c;--gray:#8a9199;--gold:#f1c40f;--blue:#3498db}
 *{box-sizing:border-box; margin:0; padding:0;}
 body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:flex;height:100vh;overflow:hidden}
 .sidebar{width:70px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding-top:20px}
@@ -18,10 +18,24 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 .inv-card{background:var(--card);padding:5px;border-radius:8px;cursor:pointer;border:2px solid transparent}
 .inv-card img{width:100%}
 .inv-card.selected{border-color:var(--green); background: rgba(46, 204, 113, 0.1);}
+
+/* MAÇ KARTI VE YENİ ÖZELLİKLER */
 .match-card{background:var(--card);padding:12px 15px;margin-bottom:10px;border-radius:12px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--border);animation:fadeIn 0.2s}
 .match-top{display:flex; justify-content:space-between; align-items:center}
-.match-user-info{display:flex; align-items:center; gap:8px; font-size:13px}
-.match-user-info b{color:var(--green)}
+.side-icon{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px}
+.side-h{background:var(--blue);box-shadow:0 0 10px var(--blue)}
+.side-t{background:var(--red);box-shadow:0 0 10px var(--red)}
+
+/* PARA ANİMASYONU */
+.coin-container{perspective:1000px;width:100px;height:100px;margin:20px auto;display:none}
+.coin{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 3s cubic-bezier(0.4, 0, 0.2, 1)}
+.coin div{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:50%}
+.coin .heads{background:url('https://i.ibb.co/XfXkY0v/image-9c9aa3.png') center/cover}
+.coin .tails{background:url('https://i.ibb.co/m0D5X1z/image-9c9a82.png') center/cover;transform:rotateY(180deg)}
+.flipping{transform:rotateY(1800deg)} /* 5 tam tur */
+.result-h{transform:rotateY(0deg) !important}
+.result-t{transform:rotateY(180deg) !important}
+
 .item-display-area{display:flex; flex-wrap:wrap; gap:4px; background:rgba(0,0,0,0.15); padding:6px; border-radius:8px}
 .item-mini-img{width:32px; height:32px; background:var(--panel); padding:3px; border-radius:5px; border:1px solid var(--border)}
 .value-tag{color:var(--gold); font-weight:bold; font-size:12px; border:1px solid rgba(241, 196, 15, 0.3); padding:2px 8px; border-radius:6px; background:rgba(241, 196, 15, 0.05)}
@@ -32,9 +46,25 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 input{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);color:#fff;border-radius:8px;margin-bottom:10px;outline:none}
 .btn{background:var(--green);color:white;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;width:100%;font-size:13px}
 .btn-red{background:var(--red)}
+.side-btn{border:2px solid var(--border);background:var(--panel);color:white;padding:10px;width:48%;border-radius:8px;cursor:pointer}
+.side-btn.active-h{border-color:var(--blue);background:rgba(52, 152, 219, 0.1)}
+.side-btn.active-t{border-color:var(--red);background:rgba(231, 76, 60, 0.1)}
 </style>
 </head>
 <body>
+
+<div id="flip-modal" class="modal-overlay">
+    <div class="box">
+        <h2 id="flip-status">ZARLAR ATILIYOR...</h2>
+        <div class="coin-container" id="coin-box" style="display:block">
+            <div id="coin-element" class="coin">
+                <div class="heads"></div>
+                <div class="tails"></div>
+            </div>
+        </div>
+        <p id="winner-text" style="font-weight:bold; font-size:18px; margin-top:10px"></p>
+    </div>
+</div>
 
 <div id="login-modal" class="modal-overlay" style="display:none">
     <div class="box">
@@ -51,7 +81,11 @@ input{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border
 <div id="inv-modal" class="modal-overlay">
     <div class="box">
         <h3 id="inv-title">Eşya Seç</h3>
-        <p style="font-size: 11px; color: var(--gray); margin-top:5px">Seçilen: <span id="select-count" style="color:#fff">0</span> | Değer: <span id="select-value" style="color:var(--gold)">0</span></p>
+        <div id="side-select" style="display:flex; justify-content:space-between; margin:15px 0">
+            <button class="side-btn" id="btn-h" onclick="selectSide('H')">MAVİ (H)</button>
+            <button class="side-btn" id="btn-t" onclick="selectSide('T')">KIRMIZI (T)</button>
+        </div>
+        <p style="font-size: 11px; color: var(--gray)">Seçilen: <span id="select-count" style="color:#fff">0</span> | Değer: <span id="select-value" style="color:var(--gold)">0</span></p>
         <div class="grid" id="inventory-grid"></div>
         <button class="btn" id="confirm-btn" onclick="handleConfirm()">ONAYLA</button>
         <button class="btn btn-red" onclick="closeInv()" style="margin-top:5px">KAPAT</button>
@@ -86,11 +120,9 @@ input{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border
 </div>
 
 <script>
-// --- TEMEL DEĞİŞKENLER ---
 let user = localStorage.getItem('rbx_user') || "";
 let invCount = localStorage.getItem('rbx_inv') ? parseInt(localStorage.getItem('rbx_inv')) : 50;
 let chatHistory = JSON.parse(localStorage.getItem('chat_history') || "[]");
-let globalMatches = []; 
 
 const ITEM_IMG = "https://supremevalues.com/media/mm2ancients/Harvester.png";
 const HARVESTER_VALUE = 425;
@@ -103,125 +135,104 @@ const pubnub = new PubNub({
     uuid: user || "u_" + Math.random().toString(16).slice(2, 8)
 });
 
-pubnub.subscribe({ channels: [CH_CHAT, CH_MATCH], withPresence: true });
+pubnub.subscribe({ channels: [CH_CHAT, CH_MATCH] });
 
-// --- PUBNUB DİNLEYİCİ ---
 pubnub.addListener({
     status: (s) => { if(s.category === "PNConnectedCategory") document.getElementById('chat-status').style.color = "var(--green)"; },
     message: (m) => {
         if(m.channel === CH_CHAT && m.message.u !== user) receiveChat(m.message.u, m.message.t, true);
         if(m.channel === CH_MATCH) {
-            if(m.message.type === 'new') addMatchToUI(m.message.user, m.message.id, m.message.amt);
-            if(m.message.type === 'cancel' || m.message.type === 'joined') document.getElementById(m.message.id)?.remove();
+            if(m.message.type === 'new') addMatchToUI(m.message.user, m.message.id, m.message.amt, m.message.side);
+            if(m.message.type === 'cancel') document.getElementById(m.message.id)?.remove();
+            if(m.message.type === 'roll') startCoinFlip(m.message.id, m.message.res, m.message.creator, m.message.joiner, m.message.amt, m.message.cSide);
         }
     }
 });
 
-// --- CHAT FONKSİYONLARI ---
-function sendMsg() {
-    const i = document.getElementById('chat-input');
-    if(!i.value.trim() || !user) return;
-    receiveChat(user, i.value, true);
-    pubnub.publish({ channel: CH_CHAT, message: { u: user, t: i.value } });
-    i.value = "";
-}
-
-function receiveChat(u, t, save) {
-    const box = document.getElementById('chat-msgs');
-    const div = document.createElement('div');
-    div.className = "msg"; div.innerHTML = `<b>${u}</b> ${t}`;
-    box.appendChild(div); box.scrollTop = box.scrollHeight;
-    if(save) {
-        chatHistory.push({u: u, t: t});
-        if(chatHistory.length > 50) chatHistory.shift();
-        localStorage.setItem('chat_history', JSON.stringify(chatHistory));
-    }
-}
-
-// --- MAÇ VE ENVANTER MANTIĞI ---
+let selectedSide = 'H';
 let selectedCount = 0;
 let joinId = null;
 let reqAmt = 0;
 
+function selectSide(s) {
+    selectedSide = s;
+    document.getElementById('btn-h').className = s === 'H' ? 'side-btn active-h' : 'side-btn';
+    document.getElementById('btn-t').className = s === 'T' ? 'side-btn active-t' : 'side-btn';
+}
+
 function openInvForCreate() {
     joinId = null;
-    document.getElementById('inv-title').innerText = "Maç Oluştur - Eşya Seç";
+    document.getElementById('side-select').style.display = "flex";
     openInv();
 }
 
 function openInvForJoin(id, amt) {
-    joinId = id;
-    reqAmt = amt;
-    document.getElementById('inv-title').innerText = "Katılmak İçin Seç (" + amt + " Gerekli)";
+    joinId = id; reqAmt = amt;
+    document.getElementById('side-select').style.display = "none";
     openInv();
-}
-
-function openInv() {
-    const grid = document.getElementById('inventory-grid');
-    grid.innerHTML = "";
-    selectedCount = 0;
-    updateSelectedCountUI();
-    for(let i=0; i < invCount; i++) {
-        const item = document.createElement('div');
-        item.className = "inv-card";
-        item.innerHTML = `<img src="${ITEM_IMG}">`;
-        item.onclick = () => toggleSelect(item);
-        grid.appendChild(item);
-    }
-    document.getElementById('inv-modal').style.display = "flex";
-}
-
-function toggleSelect(el) {
-    if(el.classList.contains('selected')) {
-        el.classList.remove('selected');
-        selectedCount--;
-    } else {
-        if(selectedCount >= 15) return alert("Max 15!");
-        el.classList.add('selected');
-        selectedCount++;
-    }
-    updateSelectedCountUI();
-}
-
-function updateSelectedCountUI() {
-    document.getElementById('select-count').innerText = selectedCount;
-    document.getElementById('select-value').innerText = (selectedCount * HARVESTER_VALUE);
 }
 
 function handleConfirm() {
     if(selectedCount === 0) return;
-    
     if(joinId) {
-        // MAÇA KATILMA MODU
-        if(selectedCount !== reqAmt) {
-            alert("Hata: Tam olarak " + reqAmt + " adet eşya seçmelisin!");
-            return;
-        }
-        pubnub.publish({ channel: CH_MATCH, message: { type: 'joined', id: joinId, joiner: user } });
+        if(selectedCount !== reqAmt) return alert("Hata: " + reqAmt + " eşya seç!");
+        const result = Math.random() > 0.5 ? 'H' : 'T';
+        const matchData = document.getElementById(joinId).dataset;
+        pubnub.publish({ channel: CH_MATCH, message: { 
+            type: 'roll', id: joinId, res: result, 
+            creator: matchData.owner, joiner: user, 
+            amt: reqAmt, cSide: matchData.side 
+        }});
         invCount -= selectedCount;
-        alert("Maça katıldın!");
     } else {
-        // MAÇ OLUŞTURMA MODU
         const mId = "M_" + Math.random().toString(36).substr(2, 8);
-        pubnub.publish({ channel: CH_MATCH, message: { type: 'new', user: user, id: mId, amt: selectedCount } });
-        addMatchToUI(user, mId, selectedCount);
+        pubnub.publish({ channel: CH_MATCH, message: { type: 'new', user: user, id: mId, amt: selectedCount, side: selectedSide }});
+        addMatchToUI(user, mId, selectedCount, selectedSide);
         invCount -= selectedCount;
     }
-    updateUI();
-    closeInv();
+    updateUI(); closeInv();
 }
 
-function addMatchToUI(owner, id, amt) {
+function startCoinFlip(id, res, creator, joiner, amt, cSide) {
+    document.getElementById(id)?.remove();
+    const modal = document.getElementById('flip-modal');
+    const coin = document.getElementById('coin-element');
+    const winnerTxt = document.getElementById('winner-text');
+    
+    modal.style.display = "flex";
+    coin.className = "coin flipping";
+    winnerTxt.innerText = "";
+
+    setTimeout(() => {
+        coin.className = "coin " + (res === 'H' ? 'result-h' : 'result-t');
+        const winner = (res === cSide) ? creator : joiner;
+        winnerTxt.innerText = "KAZANAN: " + winner;
+        winnerTxt.style.color = (winner === user) ? "var(--green)" : "var(--red)";
+        
+        if(winner === user) {
+            invCount += (amt * 2);
+            updateUI();
+        }
+
+        setTimeout(() => { modal.style.display = "none"; }, 3000);
+    }, 3000);
+}
+
+function addMatchToUI(owner, id, amt, side) {
     if(document.getElementById(id)) return;
     const list = document.getElementById('match-list');
     const div = document.createElement('div');
     div.className = "match-card"; div.id = id;
+    div.dataset.owner = owner; div.dataset.side = side;
     let itemsHtml = "";
     for(let i=0; i<amt; i++) itemsHtml += `<img src="${ITEM_IMG}" class="item-mini-img">`;
 
     div.innerHTML = `
         <div class="match-top">
-            <div class="match-user-info"><b>${owner}</b></div>
+            <div class="match-user-info">
+                <span class="side-icon ${side==='H'?'side-h':'side-t'}">${side}</span>
+                <b>${owner}</b>
+            </div>
             <div class="value-tag">💎 ${(amt * HARVESTER_VALUE).toLocaleString()}</div>
         </div>
         <div class="item-display-area">${itemsHtml}</div>
@@ -234,43 +245,46 @@ function addMatchToUI(owner, id, amt) {
     list.prepend(div);
 }
 
+// --- SABİT FONKSİYONLAR ---
+function openInv() {
+    const grid = document.getElementById('inventory-grid');
+    grid.innerHTML = ""; selectedCount = 0; updateSelectedCountUI();
+    for(let i=0; i < invCount; i++) {
+        const item = document.createElement('div');
+        item.className = "inv-card"; item.innerHTML = `<img src="${ITEM_IMG}">`;
+        item.onclick = () => {
+            if(item.classList.toggle('selected')) selectedCount++; else selectedCount--;
+            updateSelectedCountUI();
+        };
+        grid.appendChild(item);
+    }
+    document.getElementById('inv-modal').style.display = "flex";
+}
+function updateSelectedCountUI() {
+    document.getElementById('select-count').innerText = selectedCount;
+    document.getElementById('select-value').innerText = (selectedCount * HARVESTER_VALUE);
+}
 function cancelMatch(id, amt) {
     pubnub.publish({ channel: CH_MATCH, message: { type: 'cancel', id: id } });
-    document.getElementById(id)?.remove();
-    invCount += amt;
-    updateUI();
+    document.getElementById(id)?.remove(); invCount += amt; updateUI();
 }
-
-// --- YARDIMCI FONKSİYONLAR ---
-function updateUI() {
-    document.getElementById('u-inv').innerText = invCount;
-    localStorage.setItem('rbx_inv', invCount);
+function updateUI() { document.getElementById('u-inv').innerText = invCount; localStorage.setItem('rbx_inv', invCount); }
+function sendMsg() {
+    const i = document.getElementById('chat-input'); if(!i.value.trim() || !user) return;
+    receiveChat(user, i.value, true);
+    pubnub.publish({ channel: CH_CHAT, message: { u: user, t: i.value } }); i.value = "";
 }
-
-function finishLogin() { 
-    user = document.getElementById('rbx-name').value;
-    if(user.length < 2) return;
-    localStorage.setItem('rbx_user', user); 
-    location.reload(); 
+function receiveChat(u, t, save) {
+    const box = document.getElementById('chat-msgs'); const div = document.createElement('div');
+    div.className = "msg"; div.innerHTML = `<b>${u}</b> ${t}`;
+    box.appendChild(div); box.scrollTop = box.scrollHeight;
+    if(save) { chatHistory.push({u, t}); if(chatHistory.length > 50) chatHistory.shift(); localStorage.setItem('chat_history', JSON.stringify(chatHistory)); }
 }
-
-function nextStep() {
-    if(document.getElementById('rbx-name').value.length < 2) return;
-    document.getElementById('v-code').innerText = "LUCK-" + Math.floor(1000 + Math.random()*9000);
-    document.getElementById('verify-section').style.display = "block";
-}
-
+function nextStep() { if(document.getElementById('rbx-name').value.length < 2) return; document.getElementById('v-code').innerText = "LUCK-" + Math.floor(1000 + Math.random()*9000); document.getElementById('verify-section').style.display = "block"; }
+function finishLogin() { user = document.getElementById('rbx-name').value; localStorage.setItem('rbx_user', user); location.reload(); }
 function logout() { localStorage.clear(); location.reload(); }
 function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
-
-window.onload = () => {
-    if(!user) document.getElementById('login-modal').style.display = "flex";
-    else {
-        document.getElementById('u-name').innerText = user;
-        updateUI();
-        chatHistory.forEach(msg => receiveChat(msg.u, msg.t, false));
-    }
-};
+window.onload = () => { if(!user) document.getElementById('login-modal').style.display = "flex"; else { document.getElementById('u-name').innerText = user; updateUI(); chatHistory.forEach(msg => receiveChat(msg.u, msg.t, false)); } };
 </script>
 </body>
 </html>
