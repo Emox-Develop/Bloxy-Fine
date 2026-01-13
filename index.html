@@ -19,33 +19,27 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 .inv-card img{width:100%}
 .inv-card.selected{border-color:var(--green); background: rgba(46, 204, 113, 0.1);}
 
-/* MAÇ KARTI VE YENİ ÖZELLİKLER */
+/* PARA ANİMASYONU DÜZELTME */
+.coin-container{perspective:1000px;width:120px;height:120px;margin:30px auto;display:block}
+.coin{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 3s cubic-bezier(0.1, 0, 0.1, 1)}
+.coin div{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:50%;border:3px solid rgba(255,255,255,0.1)}
+.coin .heads{background:url('https://i.ibb.co/XfXkY0v/image-9c9aa3.png') center/cover; background-size: 100% 100%;}
+.coin .tails{background:url('https://i.ibb.co/m0D5X1z/image-9c9a82.png') center/cover; background-size: 100% 100%; transform:rotateY(180deg)}
+.flipping{transform:rotateY(2160deg)} /* Daha hızlı ve çok tur */
+
 .match-card{background:var(--card);padding:12px 15px;margin-bottom:10px;border-radius:12px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--border);animation:fadeIn 0.2s}
 .match-top{display:flex; justify-content:space-between; align-items:center}
 .side-icon{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px}
 .side-h{background:var(--blue);box-shadow:0 0 10px var(--blue)}
 .side-t{background:var(--red);box-shadow:0 0 10px var(--red)}
-
-/* PARA ANİMASYONU */
-.coin-container{perspective:1000px;width:100px;height:100px;margin:20px auto;display:none}
-.coin{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 3s cubic-bezier(0.4, 0, 0.2, 1)}
-.coin div{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:50%}
-.coin .heads{background:url('https://i.ibb.co/XfXkY0v/image-9c9aa3.png') center/cover}
-.coin .tails{background:url('https://i.ibb.co/m0D5X1z/image-9c9a82.png') center/cover;transform:rotateY(180deg)}
-.flipping{transform:rotateY(1800deg)} /* 5 tam tur */
-.result-h{transform:rotateY(0deg) !important}
-.result-t{transform:rotateY(180deg) !important}
-
 .item-display-area{display:flex; flex-wrap:wrap; gap:4px; background:rgba(0,0,0,0.15); padding:6px; border-radius:8px}
 .item-mini-img{width:32px; height:32px; background:var(--panel); padding:3px; border-radius:5px; border:1px solid var(--border)}
 .value-tag{color:var(--gold); font-weight:bold; font-size:12px; border:1px solid rgba(241, 196, 15, 0.3); padding:2px 8px; border-radius:6px; background:rgba(241, 196, 15, 0.05)}
 #chat-msgs{flex:1;padding:15px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
 .msg{background:var(--card);padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px}
 .msg b{color:var(--green);font-size:10px;display:block}
-@keyframes fadeIn { from{opacity:0; transform:scale(0.98)} to{opacity:1; transform:scale(1)} }
 input{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);color:#fff;border-radius:8px;margin-bottom:10px;outline:none}
 .btn{background:var(--green);color:white;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;width:100%;font-size:13px}
-.btn-red{background:var(--red)}
 .side-btn{border:2px solid var(--border);background:var(--panel);color:white;padding:10px;width:48%;border-radius:8px;cursor:pointer}
 .side-btn.active-h{border-color:var(--blue);background:rgba(52, 152, 219, 0.1)}
 .side-btn.active-t{border-color:var(--red);background:rgba(231, 76, 60, 0.1)}
@@ -56,13 +50,13 @@ input{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border
 <div id="flip-modal" class="modal-overlay">
     <div class="box">
         <h2 id="flip-status">ZARLAR ATILIYOR...</h2>
-        <div class="coin-container" id="coin-box" style="display:block">
+        <div class="coin-container">
             <div id="coin-element" class="coin">
                 <div class="heads"></div>
                 <div class="tails"></div>
             </div>
         </div>
-        <p id="winner-text" style="font-weight:bold; font-size:18px; margin-top:10px"></p>
+        <p id="winner-text" style="font-weight:bold; font-size:20px; margin-top:15px; height: 30px;"></p>
     </div>
 </div>
 
@@ -82,52 +76,35 @@ input{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border
     <div class="box">
         <h3 id="inv-title">Eşya Seç</h3>
         <div id="side-select" style="display:flex; justify-content:space-between; margin:15px 0">
-            <button class="side-btn" id="btn-h" onclick="selectSide('H')">MAVİ (H)</button>
+            <button class="side-btn active-h" id="btn-h" onclick="selectSide('H')">MAVİ (H)</button>
             <button class="side-btn" id="btn-t" onclick="selectSide('T')">KIRMIZI (T)</button>
         </div>
-        <p style="font-size: 11px; color: var(--gray)">Seçilen: <span id="select-count" style="color:#fff">0</span> | Değer: <span id="select-value" style="color:var(--gold)">0</span></p>
         <div class="grid" id="inventory-grid"></div>
-        <button class="btn" id="confirm-btn" onclick="handleConfirm()">ONAYLA</button>
-        <button class="btn btn-red" onclick="closeInv()" style="margin-top:5px">KAPAT</button>
+        <button class="btn" onclick="handleConfirm()">ONAYLA</button>
+        <button class="btn" onclick="closeInv()" style="margin-top:5px; background:var(--red)">KAPAT</button>
     </div>
 </div>
 
-<div class="sidebar"><div style="width:35px;height:35px;background:var(--green);border-radius:8px"></div></div>
-
+<div class="sidebar"></div>
 <div class="main">
     <div class="header">
         <div style="font-weight:900; font-size:18px">BLOX<span style="color:var(--green)">LUCK</span></div>
-        <div class="user-info">
-            <span id="u-name" style="font-size:14px">...</span>
-            <div style="background:var(--card); padding:4px 12px; border-radius:15px; font-size:14px">💰 <span id="u-inv">0</span></div>
-            <button onclick="logout()" style="background:none; border:none; color:var(--red); cursor:pointer; font-size:11px">Çıkış</button>
-        </div>
+        <div class="user-info"><span id="u-name">...</span> | 💰 <span id="u-inv">0</span></div>
     </div>
     <div style="padding:20px; overflow-y: auto; flex:1">
         <button class="btn" style="width:150px" onclick="openInvForCreate()">MAÇ OLUŞTUR</button>
-        <h4 style="margin: 20px 0 10px 0; color: var(--gray); font-size:12px; letter-spacing:1px">AKTİF MAÇLAR</h4>
-        <div id="match-list" style="max-width: 600px;"></div>
+        <div id="match-list" style="margin-top:20px"></div>
     </div>
 </div>
 
 <div class="chat-area">
-    <div style="padding:15px; border-bottom:1px solid var(--border); font-size:13px; font-weight:bold; display:flex; justify-content:space-between">
-        <span>CANLI CHAT</span>
-        <span id="chat-status" style="color:var(--red)">●</span>
-    </div>
     <div id="chat-msgs"></div>
-    <div style="padding:15px"><input type="text" id="chat-input" placeholder="Mesaj yaz..." onkeypress="if(event.key==='Enter') sendMsg()"></div>
+    <div style="padding:15px"><input type="text" id="chat-input" placeholder="Mesaj..." onkeypress="if(event.key==='Enter') sendMsg()"></div>
 </div>
 
 <script>
 let user = localStorage.getItem('rbx_user') || "";
 let invCount = localStorage.getItem('rbx_inv') ? parseInt(localStorage.getItem('rbx_inv')) : 50;
-let chatHistory = JSON.parse(localStorage.getItem('chat_history') || "[]");
-
-const ITEM_IMG = "https://supremevalues.com/media/mm2ancients/Harvester.png";
-const HARVESTER_VALUE = 425;
-const CH_CHAT = "CHAT_V201_COMPACT";
-const CH_MATCH = "MATCH_V201_COMPACT";
 
 const pubnub = new PubNub({
     publishKey: "pub-c-134bcaab-4830-4bbb-afb4-b7595ffffebe",
@@ -135,13 +112,12 @@ const pubnub = new PubNub({
     uuid: user || "u_" + Math.random().toString(16).slice(2, 8)
 });
 
-pubnub.subscribe({ channels: [CH_CHAT, CH_MATCH] });
+pubnub.subscribe({ channels: ["CHAT_V201_COMPACT", "MATCH_V201_COMPACT"] });
 
 pubnub.addListener({
-    status: (s) => { if(s.category === "PNConnectedCategory") document.getElementById('chat-status').style.color = "var(--green)"; },
     message: (m) => {
-        if(m.channel === CH_CHAT && m.message.u !== user) receiveChat(m.message.u, m.message.t, true);
-        if(m.channel === CH_MATCH) {
+        if(m.channel === "CHAT_V201_COMPACT" && m.message.u !== user) receiveChat(m.message.u, m.message.t);
+        if(m.channel === "MATCH_V201_COMPACT") {
             if(m.message.type === 'new') addMatchToUI(m.message.user, m.message.id, m.message.amt, m.message.side);
             if(m.message.type === 'cancel') document.getElementById(m.message.id)?.remove();
             if(m.message.type === 'roll') startCoinFlip(m.message.id, m.message.res, m.message.creator, m.message.joiner, m.message.amt, m.message.cSide);
@@ -160,17 +136,8 @@ function selectSide(s) {
     document.getElementById('btn-t').className = s === 'T' ? 'side-btn active-t' : 'side-btn';
 }
 
-function openInvForCreate() {
-    joinId = null;
-    document.getElementById('side-select').style.display = "flex";
-    openInv();
-}
-
-function openInvForJoin(id, amt) {
-    joinId = id; reqAmt = amt;
-    document.getElementById('side-select').style.display = "none";
-    openInv();
-}
+function openInvForCreate() { joinId = null; document.getElementById('side-select').style.display="flex"; openInv(); }
+function openInvForJoin(id, amt) { joinId = id; reqAmt = amt; document.getElementById('side-select').style.display="none"; openInv(); }
 
 function handleConfirm() {
     if(selectedCount === 0) return;
@@ -178,15 +145,13 @@ function handleConfirm() {
         if(selectedCount !== reqAmt) return alert("Hata: " + reqAmt + " eşya seç!");
         const result = Math.random() > 0.5 ? 'H' : 'T';
         const matchData = document.getElementById(joinId).dataset;
-        pubnub.publish({ channel: CH_MATCH, message: { 
-            type: 'roll', id: joinId, res: result, 
-            creator: matchData.owner, joiner: user, 
-            amt: reqAmt, cSide: matchData.side 
+        pubnub.publish({ channel: "MATCH_V201_COMPACT", message: { 
+            type: 'roll', id: joinId, res: result, creator: matchData.owner, joiner: user, amt: reqAmt, cSide: matchData.side 
         }});
         invCount -= selectedCount;
     } else {
         const mId = "M_" + Math.random().toString(36).substr(2, 8);
-        pubnub.publish({ channel: CH_MATCH, message: { type: 'new', user: user, id: mId, amt: selectedCount, side: selectedSide }});
+        pubnub.publish({ channel: "MATCH_V201_COMPACT", message: { type: 'new', user: user, id: mId, amt: selectedCount, side: selectedSide }});
         addMatchToUI(user, mId, selectedCount, selectedSide);
         invCount -= selectedCount;
     }
@@ -200,22 +165,22 @@ function startCoinFlip(id, res, creator, joiner, amt, cSide) {
     const winnerTxt = document.getElementById('winner-text');
     
     modal.style.display = "flex";
-    coin.className = "coin flipping";
-    winnerTxt.innerText = "";
-
+    winnerTxt.innerText = ""; // Önce temizle
+    coin.style.transform = "rotateY(0deg)"; // Reset
+    
     setTimeout(() => {
-        coin.className = "coin " + (res === 'H' ? 'result-h' : 'result-t');
-        const winner = (res === cSide) ? creator : joiner;
-        winnerTxt.innerText = "KAZANAN: " + winner;
-        winnerTxt.style.color = (winner === user) ? "var(--green)" : "var(--red)";
+        coin.style.transition = "transform 3s cubic-bezier(0.1, 0, 0.1, 1)";
+        coin.style.transform = res === 'H' ? "rotateY(2160deg)" : "rotateY(2340deg)";
         
-        if(winner === user) {
-            invCount += (amt * 2);
-            updateUI();
-        }
-
-        setTimeout(() => { modal.style.display = "none"; }, 3000);
-    }, 3000);
+        // YAZI PARA DURUNCA (3 SANİYE SONRA) GELECEK
+        setTimeout(() => {
+            const winner = (res === cSide) ? creator : joiner;
+            winnerTxt.innerText = "KAZANAN: " + winner;
+            winnerTxt.style.color = (winner === user) ? "var(--green)" : "var(--red)";
+            if(winner === user) { invCount += (amt * 2); updateUI(); }
+            setTimeout(() => { modal.style.display = "none"; }, 2000);
+        }, 3100);
+    }, 100);
 }
 
 function addMatchToUI(owner, id, amt, side) {
@@ -224,67 +189,39 @@ function addMatchToUI(owner, id, amt, side) {
     const div = document.createElement('div');
     div.className = "match-card"; div.id = id;
     div.dataset.owner = owner; div.dataset.side = side;
-    let itemsHtml = "";
-    for(let i=0; i<amt; i++) itemsHtml += `<img src="${ITEM_IMG}" class="item-mini-img">`;
-
     div.innerHTML = `
         <div class="match-top">
-            <div class="match-user-info">
-                <span class="side-icon ${side==='H'?'side-h':'side-t'}">${side}</span>
-                <b>${owner}</b>
-            </div>
-            <div class="value-tag">💎 ${(amt * HARVESTER_VALUE).toLocaleString()}</div>
+            <div class="match-user-info"><span class="side-icon ${side==='H'?'side-h':'side-t'}">${side}</span> <b>${owner}</b></div>
+            <div class="value-tag">💎 ${(amt * 425).toLocaleString()}</div>
         </div>
-        <div class="item-display-area">${itemsHtml}</div>
+        <div class="item-display-area">${'<img src="https://supremevalues.com/media/mm2ancients/Harvester.png" class="item-mini-img">'.repeat(amt)}</div>
         <div style="display:flex; justify-content:flex-end">
-            ${owner === user 
-                ? `<button class="btn btn-red" style="width:80px; padding:5px" onclick="cancelMatch('${id}', ${amt})">İPTAL</button>` 
-                : `<button class="btn" style="width:80px; padding:5px" onclick="openInvForJoin('${id}', ${amt})">KATIL</button>`}
+            ${owner === user ? `<button class="btn" style="background:var(--red); width:80px" onclick="cancelMatch('${id}', ${amt})">İPTAL</button>` 
+            : `<button class="btn" style="width:80px" onclick="openInvForJoin('${id}', ${amt})">KATIL</button>`}
         </div>
     `;
     list.prepend(div);
 }
 
-// --- SABİT FONKSİYONLAR ---
 function openInv() {
-    const grid = document.getElementById('inventory-grid');
-    grid.innerHTML = ""; selectedCount = 0; updateSelectedCountUI();
+    const grid = document.getElementById('inventory-grid'); grid.innerHTML = ""; selectedCount = 0;
     for(let i=0; i < invCount; i++) {
-        const item = document.createElement('div');
-        item.className = "inv-card"; item.innerHTML = `<img src="${ITEM_IMG}">`;
-        item.onclick = () => {
-            if(item.classList.toggle('selected')) selectedCount++; else selectedCount--;
-            updateSelectedCountUI();
-        };
+        const item = document.createElement('div'); item.className = "inv-card";
+        item.innerHTML = `<img src="https://supremevalues.com/media/mm2ancients/Harvester.png">`;
+        item.onclick = () => { if(item.classList.toggle('selected')) selectedCount++; else selectedCount--; };
         grid.appendChild(item);
     }
     document.getElementById('inv-modal').style.display = "flex";
 }
-function updateSelectedCountUI() {
-    document.getElementById('select-count').innerText = selectedCount;
-    document.getElementById('select-value').innerText = (selectedCount * HARVESTER_VALUE);
-}
-function cancelMatch(id, amt) {
-    pubnub.publish({ channel: CH_MATCH, message: { type: 'cancel', id: id } });
-    document.getElementById(id)?.remove(); invCount += amt; updateUI();
-}
-function updateUI() { document.getElementById('u-inv').innerText = invCount; localStorage.setItem('rbx_inv', invCount); }
-function sendMsg() {
-    const i = document.getElementById('chat-input'); if(!i.value.trim() || !user) return;
-    receiveChat(user, i.value, true);
-    pubnub.publish({ channel: CH_CHAT, message: { u: user, t: i.value } }); i.value = "";
-}
-function receiveChat(u, t, save) {
-    const box = document.getElementById('chat-msgs'); const div = document.createElement('div');
-    div.className = "msg"; div.innerHTML = `<b>${u}</b> ${t}`;
-    box.appendChild(div); box.scrollTop = box.scrollHeight;
-    if(save) { chatHistory.push({u, t}); if(chatHistory.length > 50) chatHistory.shift(); localStorage.setItem('chat_history', JSON.stringify(chatHistory)); }
-}
-function nextStep() { if(document.getElementById('rbx-name').value.length < 2) return; document.getElementById('v-code').innerText = "LUCK-" + Math.floor(1000 + Math.random()*9000); document.getElementById('verify-section').style.display = "block"; }
+
+function updateUI() { document.getElementById('u-inv').innerText = invCount; localStorage.setItem('rbx_inv', invCount); document.getElementById('u-name').innerText = user; }
+function cancelMatch(id, amt) { pubnub.publish({ channel: "MATCH_V201_COMPACT", message: { type: 'cancel', id: id } }); document.getElementById(id)?.remove(); invCount += amt; updateUI(); }
+function sendMsg() { const i = document.getElementById('chat-input'); if(!i.value.trim()) return; pubnub.publish({ channel: "CHAT_V201_COMPACT", message: { u: user, t: i.value } }); receiveChat(user, i.value); i.value = ""; }
+function receiveChat(u, t) { const box = document.getElementById('chat-msgs'); const div = document.createElement('div'); div.className = "msg"; div.innerHTML = `<b>${u}</b> ${t}`; box.appendChild(div); box.scrollTop = box.scrollHeight; }
+function nextStep() { document.getElementById('v-code').innerText = "LUCK-" + Math.floor(1000 + Math.random()*9000); document.getElementById('verify-section').style.display = "block"; }
 function finishLogin() { user = document.getElementById('rbx-name').value; localStorage.setItem('rbx_user', user); location.reload(); }
-function logout() { localStorage.clear(); location.reload(); }
 function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
-window.onload = () => { if(!user) document.getElementById('login-modal').style.display = "flex"; else { document.getElementById('u-name').innerText = user; updateUI(); chatHistory.forEach(msg => receiveChat(msg.u, msg.t, false)); } };
+window.onload = () => { if(!user) document.getElementById('login-modal').style.display = "flex"; else updateUI(); };
 </script>
 </body>
 </html>
