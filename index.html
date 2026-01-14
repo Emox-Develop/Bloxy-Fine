@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Bloxy Fine | Final Edition</title>
+<title>Bloxy Fine | Value Logic Edition</title>
 <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
 <style>
 :root{--bg:#0d0f13;--panel:#15181f;--card:#1c2028;--border:#262a33;--green:#2ecc71;--red:#e74c3c;--gray:#8a9199;--gold:#f1c40f;--blue:#3498db;--purple:#9b59b6}
@@ -14,7 +14,7 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:none;align-items:center;justify-content:center}
 .box{background:var(--panel);padding:25px;border-radius:15px;width:550px;text-align:center;border:1px solid var(--border)}
 .grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin:15px 0;max-height:350px;overflow-y:auto;padding:10px}
-.inv-card{background:var(--card);padding:10px;border-radius:8px;cursor:pointer;border:2px solid transparent;text-align:center;transition:0.2s}
+.inv-card{background:var(--card);padding:10px;border-radius:8px;cursor:pointer;border:2px solid transparent;text-align:center}
 .inv-card img{width:60px;height:60px;object-fit:contain}
 .inv-card.selected{border-color:var(--green); background: rgba(46, 204, 113, 0.1);}
 
@@ -28,9 +28,8 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 .match-card{background:var(--card);padding:12px;margin-bottom:10px;border-radius:12px;border:1px solid var(--border)}
 .role-tag{font-size:9px; font-weight:bold; padding:2px 5px; border-radius:4px; margin-right:5px; text-transform:uppercase}
 .role-owner{background:var(--red); color:white}
-.btn{background:var(--green);color:white;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;transition:0.2s}
-.btn:hover{filter:brightness(1.2)}
-#admin-panel{position:fixed;bottom:20px;right:330px;background:var(--panel);border:1px solid var(--red);padding:15px;border-radius:12px;z-index:10000;display:none;width:250px;box-shadow:0 0 15px rgba(231,76,60,0.2)}
+.btn{background:var(--green);color:white;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold}
+#admin-panel{position:fixed;bottom:20px;right:330px;background:var(--panel);border:1px solid var(--red);padding:15px;border-radius:12px;z-index:10000;display:none;width:250px}
 #admin-panel input, #admin-panel select{width:100%; margin-bottom:10px; padding:8px; background:var(--bg); color:white; border:1px solid var(--border)}
 .admin-badge{position:fixed;bottom:20px;right:330px;background:var(--red);color:white;padding:10px;border-radius:50%;cursor:pointer;font-weight:bold;z-index:10001;display:none}
 </style>
@@ -76,12 +75,13 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 <div id="inv-modal" class="modal-overlay">
     <div class="box">
         <h3 id="inv-title">Eşya Seç</h3>
+        <p id="val-info" style="color:var(--gold); margin:5px 0; font-weight:bold; font-size:14px">Toplam Seçilen: 0 Value</p>
         <div id="side-select-div" style="display:flex; gap:10px; margin:15px 0">
             <button class="btn" id="btn-h" style="flex:1; background:var(--blue)" onclick="selectSide('H')">MAVİ (H)</button>
             <button class="btn" id="btn-t" style="flex:1; background:var(--card)" onclick="selectSide('T')">KIRMIZI (T)</button>
         </div>
         <div class="grid" id="inventory-grid"></div>
-        <button class="btn" style="width:100%" onclick="handleConfirm()">ONAYLA</button>
+        <button class="btn" style="width:100%" onclick="handleConfirm()">MAÇI BAŞLAT / KATIL</button>
         <button class="btn" onclick="closeInv()" style="width:100%; margin-top:5px; background:var(--red)">KAPAT</button>
     </div>
 </div>
@@ -132,183 +132,177 @@ const pubnub = new PubNub({
     uuid: deviceId
 });
 
-// Kanal isimlerini sabitledik
-const CHANNELS = { CHAT: "C_X9", MATCH: "M_X9", ADMIN: "A_X9", AUTH: "S_X9" };
-pubnub.subscribe({ channels: Object.values(CHANNELS) });
+const CH_NAME = "V_VALUE_X1";
+pubnub.subscribe({ channels: [CH_NAME] });
 
-// GİRİŞ KONTROLÜ
+// GÜVENLİK VE GİRİŞ (DOKUNULMADI)
 function simpleLogin() {
-    const inputName = document.getElementById('rbx-name').value.trim();
-    if(!inputName) return;
+    const name = document.getElementById('rbx-name').value.trim();
+    if(!name) return;
     document.getElementById('login-error').innerText = "Kontrol ediliyor...";
-    pubnub.publish({ channel: CHANNELS.AUTH, message: { type: 'ping', name: inputName, dev: deviceId } });
+    pubnub.publish({ channel: CH_NAME, message: { type: 'ping', name: name, dev: deviceId } });
     setTimeout(() => {
-        if(document.getElementById('login-error').innerText !== "BU HESAPTA BAŞKASI VAR!") {
-            user = inputName; localStorage.setItem('rbx_user', user); location.reload();
+        if(document.getElementById('login-error').innerText !== "HESAPTA BAŞKASI VAR!") {
+            user = name; localStorage.setItem('rbx_user', user); location.reload();
         }
     }, 1000);
 }
 
-pubnub.addListener({
-    message: (m) => {
-        if(m.channel === CHANNELS.AUTH) {
-            if(m.message.type === 'ping' && m.message.name === user && m.message.dev !== deviceId) {
-                pubnub.publish({ channel: CHANNELS.AUTH, message: { type: 'active', name: user, target: m.message.dev } });
-            }
-            if(m.message.type === 'active' && m.message.target === deviceId) {
-                document.getElementById('login-error').innerText = "BU HESAPTA BAŞKASI VAR!";
-            }
-        }
-        if(m.channel === CHANNELS.ADMIN && m.message.target === user) {
-            if(m.message.type === 'add') { myInventory.push(m.message.item); updateUI(); }
-            if(m.message.type === 'remove') { const idx = myInventory.indexOf(m.message.item); if(idx > -1) { myInventory.splice(idx, 1); updateUI(); } }
-            if(m.message.type === 'ban') { isBan = !isBan; localStorage.setItem('rbx_ban', isBan); location.reload(); }
-        }
-        if(m.channel === CHANNELS.CHAT && m.message.u !== user) receiveChat(m.message.u, m.message.t);
-        if(m.channel === CHANNELS.MATCH) {
-            if(m.message.type === 'new') addMatchToUI(m.message.user, m.message.id, m.message.items, m.message.side);
-            if(m.message.type === 'cancel') document.getElementById(m.message.id)?.remove();
-            if(m.message.type === 'roll') {
-                document.getElementById(m.message.id)?.remove();
-                startCoinFlip(m.message.res, m.message.creator, m.message.joiner, m.message.items, m.message.cSide);
-            }
-        }
-    }
-});
-
-// MAÇ OLUŞTURMA VE ONAYLAMA SİSTEMİ (DÜZELTİLDİ)
+// MAÇ VE VALUE SİSTEMİ (GÜNCELLENDİ)
 let selectedSide = 'H'; let selectedIndices = []; let joinId = null;
 
-function selectSide(s) {
-    selectedSide = s;
-    document.getElementById('btn-h').style.background = s === 'H' ? 'var(--blue)' : 'var(--card)';
-    document.getElementById('btn-t').style.background = s === 'T' ? 'var(--red)' : 'var(--card)';
-}
-
-function openInvForCreate() { 
-    if(isBan) return alert("Banlısın!"); 
-    joinId = null; 
-    document.getElementById('side-select-div').style.display = "flex"; 
-    renderInventory(); 
-}
-
-function openInvForJoin(id) { 
-    if(isBan) return alert("Banlısın!"); 
-    joinId = id; 
-    document.getElementById('side-select-div').style.display = "none"; 
-    renderInventory(); 
-}
-
 function renderInventory() {
-    const grid = document.getElementById('inventory-grid'); 
-    grid.innerHTML = ""; 
-    selectedIndices = [];
+    const grid = document.getElementById('inventory-grid');
+    grid.innerHTML = ""; selectedIndices = [];
+    updateSelectedValueText();
+
     myInventory.forEach((itemIdx, arrayIdx) => {
         const item = ITEMS_DB[itemIdx];
         const div = document.createElement('div'); div.className = "inv-card";
-        div.innerHTML = `<img src="${item.img}"><br><small>${item.n}</small>`;
+        div.innerHTML = `<img src="${item.img}"><br><small>${item.v}</small>`;
         div.onclick = () => {
             if(div.classList.toggle('selected')) selectedIndices.push(arrayIdx);
             else selectedIndices = selectedIndices.filter(i => i !== arrayIdx);
+            updateSelectedValueText();
         };
         grid.appendChild(div);
     });
     document.getElementById('inv-modal').style.display = "flex";
 }
 
+function updateSelectedValueText() {
+    let total = selectedIndices.reduce((sum, i) => sum + ITEMS_DB[myInventory[i]].v, 0);
+    document.getElementById('val-info').innerText = "Toplam Seçilen: " + total.toLocaleString() + " Value";
+}
+
 function handleConfirm() {
-    if(selectedIndices.length === 0) return alert("Eşya seçmelisin!");
-    const sIdxs = selectedIndices.map(i => myInventory[i]);
+    if(selectedIndices.length === 0) return alert("Eşya seç!");
+    
+    const mySelectedItems = selectedIndices.map(i => myInventory[i]);
+    const myTotalValue = mySelectedItems.reduce((sum, idx) => sum + ITEMS_DB[idx].v, 0);
 
     if(joinId) {
         const mD = document.getElementById(joinId).dataset;
-        const reqItems = JSON.parse(mD.items);
-        if(JSON.stringify(sIdxs.sort()) !== JSON.stringify(reqItems.sort())) return alert("AYNI EŞYALARI SEÇMELİSİN!");
-        
+        const targetValue = parseInt(mD.totalValue);
+        const targetItems = JSON.parse(mD.items);
+
+        // KRİTİK NOKTA: İsimlere değil, Value toplamına bakıyoruz!
+        if(myTotalValue !== targetValue) {
+            return alert(`DEĞER UYUŞMUYOR! Maç Değeri: ${targetValue}, Senin Seçtiğin: ${myTotalValue}`);
+        }
+
         pubnub.publish({ 
-            channel: CHANNELS.MATCH, 
-            message: { type: 'roll', id: joinId, res: Math.random()>0.5?'H':'T', creator: mD.owner, joiner: user, items: reqItems, cSide: mD.side }
+            channel: CH_NAME, 
+            message: { 
+                type: 'roll', 
+                id: joinId, 
+                res: Math.random() > 0.5 ? 'H' : 'T', 
+                creator: mD.owner, 
+                joiner: user, 
+                cItems: targetItems, 
+                jItems: mySelectedItems, 
+                cSide: mD.side 
+            }
         });
     } else {
         const mId = "M_" + Math.random().toString(36).substr(2, 8);
         pubnub.publish({ 
-            channel: CHANNELS.MATCH, 
-            message: { type: 'new', user: user, id: mId, items: sIdxs, side: selectedSide }
+            channel: CH_NAME, 
+            message: { type: 'new', user: user, id: mId, items: mySelectedItems, side: selectedSide, totalV: myTotalValue }
         });
     }
 
-    // Envanterden düş
     selectedIndices.sort((a,b)=>b-a).forEach(i => myInventory.splice(i, 1));
-    updateUI(); 
-    closeInv();
+    updateUI(); closeInv();
 }
 
-// DİĞER FONKSİYONLAR (DOKUNULMADI)
-function startCoinFlip(res, creator, joiner, items, cSide) {
+function addMatchToUI(owner, id, items, side, totalV) {
+    if(document.getElementById(id)) return;
+    const div = document.createElement('div'); div.className = "match-card"; div.id = id;
+    div.dataset.owner = owner; div.dataset.side = side; 
+    div.dataset.items = JSON.stringify(items); div.dataset.totalValue = totalV;
+    
+    div.innerHTML = `<div style="display:flex; justify-content:space-between">
+        <b><span style="color:${side==='H'?'var(--blue)':'var(--red)'}">${side}</span> | ${owner}</b> 
+        <span style="color:var(--gold)">${totalV.toLocaleString()} Value</span></div>
+        <div style="margin:10px 0; overflow-x:auto; white-space:nowrap">
+            ${items.map(idx => `<img src="${ITEMS_DB[idx].img}" style="width:30px; margin-right:5px">`).join('')}
+        </div>
+        <button class="btn" style="width:100%; background:${owner===user?'var(--red)':'var(--green)'}" onclick="${owner===user?`cancelMatch('${id}')`:`openInvForJoin('${id}')`}">${owner===user?'İPTAL ET':'KATIL (AYNI DEĞERLE)'}</button>`;
+    document.getElementById('match-list').prepend(div);
+}
+
+// PUBNUB LISTENERS
+pubnub.addListener({
+    message: (m) => {
+        const data = m.message;
+        if(data.type === 'ping' && data.name === user && data.dev !== deviceId) {
+            pubnub.publish({ channel: CH_NAME, message: { type: 'active', name: user, target: data.dev } });
+        }
+        if(data.type === 'active' && data.target === deviceId) {
+            document.getElementById('login-error').innerText = "HESAPTA BAŞKASI VAR!";
+        }
+        if(data.type === 'new') addMatchToUI(data.user, data.id, data.items, data.side, data.totalV);
+        if(data.type === 'cancel') document.getElementById(data.id)?.remove();
+        if(data.type === 'roll') {
+            document.getElementById(data.id)?.remove();
+            startCoinFlip(data.res, data.creator, data.joiner, data.cItems, data.jItems, data.cSide);
+        }
+        if(data.type === 'admin' && data.target === user) {
+            if(data.cmd === 'add') { myInventory.push(data.item); updateUI(); }
+            if(data.cmd === 'ban') { isBan = true; localStorage.setItem('rbx_ban','true'); location.reload(); }
+        }
+    }
+});
+
+// COINFLIP VE KAZANÇ (DÜZELTİLDİ)
+function startCoinFlip(res, creator, joiner, cItems, jItems, cSide) {
     const modal = document.getElementById('flip-modal');
     const coin = document.getElementById('coin-element');
     const winnerTxt = document.getElementById('winner-text');
     modal.style.display = "flex"; winnerTxt.innerText = "";
     coin.style.transition = "none"; coin.style.transform = "rotateY(0deg)";
+    
     setTimeout(() => {
         coin.style.transition = "transform 3s cubic-bezier(0.1, 0, 0.1, 1)";
         coin.style.transform = res === 'H' ? "rotateY(2160deg)" : "rotateY(2340deg)";
+        
         setTimeout(() => {
             const winner = (res === cSide) ? creator : joiner;
             winnerTxt.innerText = "KAZANAN: " + winner;
             winnerTxt.style.color = (winner === user) ? "var(--green)" : "var(--red)";
-            if(winner === user) { myInventory.push(...items, ...items); updateUI(); }
-            setTimeout(() => { modal.style.display = "none"; }, 2500);
-        }, 3100);
-    }, 50);
+            
+            if(winner === user) {
+                // Kazanan her iki tarafın itemlerini de alır
+                myInventory.push(...cItems, ...jItems);
+                updateUI();
+            }
+            setTimeout(() => { modal.style.display = "none"; }, 3000);
+        }, 3200);
+    }, 100);
 }
 
-function addMatchToUI(owner, id, items, side) {
-    if(document.getElementById(id)) return;
-    const totalV = items.reduce((a, b) => a + ITEMS_DB[b].v, 0);
-    const div = document.createElement('div'); div.className = "match-card"; div.id = id;
-    div.dataset.owner = owner; div.dataset.side = side; div.dataset.items = JSON.stringify(items);
-    div.innerHTML = `<div style="display:flex; justify-content:space-between"><b>${side} | ${owner}</b> <span>${totalV.toLocaleString()} Val</span></div>
-        <div style="margin:10px 0">${items.map(idx => `<img src="${ITEMS_DB[idx].img}" style="width:30px">`).join('')}</div>
-        <button class="btn" style="width:100%; background:${owner===user?'var(--red)':'var(--green)'}" onclick="${owner===user?`cancelMatch('${id}')`:`openInvForJoin('${id}')`}">${owner===user?'İPTAL':'KATIL'}</button>`;
-    document.getElementById('match-list').prepend(div);
-}
-
+// STANDART FONKSIYONLAR
+function selectSide(s) { selectedSide = s; document.getElementById('btn-h').style.background = s === 'H' ? 'var(--blue)' : 'var(--card)'; document.getElementById('btn-t').style.background = s === 'T' ? 'var(--red)' : 'var(--card)'; }
+function openInvForCreate() { if(isBan) return; joinId = null; document.getElementById('side-select-div').style.display="flex"; renderInventory(); }
+function openInvForJoin(id) { if(isBan) return; joinId = id; document.getElementById('side-select-div').style.display="none"; renderInventory(); }
+function cancelMatch(id) { const mD = document.getElementById(id).dataset; pubnub.publish({ channel: CH_NAME, message: { type: 'cancel', id: id } }); myInventory.push(...JSON.parse(mD.items)); updateUI(); }
 function updateUI() {
     if(!user) return;
-    document.getElementById('u-name').innerText = user + (isBan ? " (BANLI)" : "");
+    document.getElementById('u-name').innerText = user + (isBan ? " (BAN)" : "");
     let totalValue = myInventory.reduce((a, b) => a + ITEMS_DB[b].v, 0);
     document.getElementById('u-val').innerText = totalValue.toLocaleString();
     document.getElementById('role-display').innerHTML = `<span class="role-tag ${user===OWNER_NAME?'role-owner':'role-user'}">${user===OWNER_NAME?'Owner':'User'}</span>`;
     localStorage.setItem('rbx_inv_list', JSON.stringify(myInventory));
     if(user === OWNER_NAME) document.getElementById('adm-btn').style.display = "block";
 }
-
-function cancelMatch(id) {
-    const mD = document.getElementById(id).dataset;
-    pubnub.publish({ channel: CHANNELS.MATCH, message: { type: 'cancel', id: id } });
-    myInventory.push(...JSON.parse(mD.items)); document.getElementById(id).remove(); updateUI();
-}
-
-function loadHistory() {
-    pubnub.history({ channel: CHANNELS.CHAT, count: 20 }, (s, r) => r?.messages?.forEach(m => receiveChat(m.entry.u, m.entry.t)));
-    pubnub.history({ channel: CHANNELS.MATCH, count: 50 }, (s, r) => {
-        let active = new Map();
-        r?.messages?.forEach(m => {
-            if(m.entry.type === 'new') active.set(m.entry.id, m.entry);
-            if(m.entry.type === 'cancel' || m.entry.type === 'roll') active.delete(m.entry.id);
-        });
-        active.forEach(m => addMatchToUI(m.user, m.id, m.items, m.side));
-    });
-}
-
-function adminAction(type) { const t = document.getElementById('adm-target').value; const i = parseInt(document.getElementById('adm-item').value); if(!t) return alert("İsim!"); pubnub.publish({ channel: CHANNELS.ADMIN, message: { type: type, target: t, item: i } }); }
+function adminAction(cmd) { const t = document.getElementById('adm-target').value; const i = parseInt(document.getElementById('adm-item').value); pubnub.publish({ channel: CH_NAME, message: { type: 'admin', cmd: cmd, target: t, item: i } }); }
 function toggleAdmin() { const p = document.getElementById('admin-panel'); p.style.display = p.style.display === "block" ? "none" : "block"; }
-function sendMsg() { if(isBan) return alert("Banlı!"); const i = document.getElementById('chat-input'); if(!i.value.trim()) return; pubnub.publish({ channel: CHANNELS.CHAT, message: { u: user, t: i.value } }); receiveChat(user, i.value); i.value = ""; }
-function receiveChat(u, t) { const box = document.getElementById('chat-msgs'); const div = document.createElement('div'); div.className = "msg"; div.innerHTML = `<span class="role-tag ${u===OWNER_NAME?'role-owner':'role-user'}">${u===OWNER_NAME?'Owner':'User'}</span><b>${u}:</b> ${t}`; box.appendChild(div); box.scrollTop = box.scrollHeight; }
+function sendMsg() { const i = document.getElementById('chat-input'); if(!i.value.trim() || isBan) return; pubnub.publish({ channel: CH_NAME, message: { type: 'chat', u: user, t: i.value } }); i.value = ""; }
+function receiveChat(u, t) { const box = document.getElementById('chat-msgs'); const div = document.createElement('div'); div.innerHTML = `<b>${u}:</b> ${t}`; box.appendChild(div); box.scrollTop = box.scrollHeight; }
 function logout() { localStorage.removeItem('rbx_user'); location.reload(); }
 function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
-window.onload = () => { if(!user) document.getElementById('login-modal').style.display="flex"; else { updateUI(); loadHistory(); }};
+window.onload = () => { if(!user) document.getElementById('login-modal').style.display="flex"; else { updateUI(); }};
 </script>
 </body>
 </html>
