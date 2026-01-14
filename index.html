@@ -19,26 +19,21 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 .inv-card img{width:100%}
 .inv-card.selected{border-color:var(--green); background: rgba(46, 204, 113, 0.1);}
 
-/* PARA ANİMASYONU VE GÖRSEL DÜZELTME */
+/* PARA ANİMASYONU VE H/T YAZILARI */
 .coin-container{perspective:1000px;width:130px;height:130px;margin:30px auto;display:block}
 .coin{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 3s cubic-bezier(0.1, 0, 0.1, 1)}
-.coin div{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:50%}
-/* Senin attığın görselleri buraya tam kaplayacak şekilde koydum */
-.coin .heads{background:url('https://i.ibb.co/XfXkY0v/image-9c9aa3.png') center/cover no-repeat; transform: rotateY(0deg);}
-.coin .tails{background:url('https://i.ibb.co/m0D5X1z/image-9c9a82.png') center/cover no-repeat; transform: rotateY(180deg);}
+.coin div{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:60px;font-weight:900;border:5px solid rgba(255,255,255,0.2)}
+.coin .heads{background:var(--blue); color:white; transform: rotateY(0deg); box-shadow: 0 0 20px var(--blue);}
+.coin .tails{background:var(--red); color:white; transform: rotateY(180deg); box-shadow: 0 0 20px var(--red);}
 
 .match-card{background:var(--card);padding:12px 15px;margin-bottom:10px;border-radius:12px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--border);animation:fadeIn 0.2s}
 .match-top{display:flex; justify-content:space-between; align-items:center}
 .side-icon{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px}
 .side-h{background:var(--blue);box-shadow:0 0 10px var(--blue)}
 .side-t{background:var(--red);box-shadow:0 0 10px var(--red)}
-.item-display-area{display:flex; flex-wrap:wrap; gap:4px; background:rgba(0,0,0,0.15); padding:6px; border-radius:8px}
-.item-mini-img{width:32px; height:32px; background:var(--panel); padding:3px; border-radius:5px; border:1px solid var(--border)}
-.value-tag{color:var(--gold); font-weight:bold; font-size:12px; border:1px solid rgba(241, 196, 15, 0.3); padding:2px 8px; border-radius:6px; background:rgba(241, 196, 15, 0.05)}
 #chat-msgs{flex:1;padding:15px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
 .msg{background:var(--card);padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px}
 .msg b{color:var(--green);font-size:10px;display:block}
-input{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);color:#fff;border-radius:8px;margin-bottom:10px;outline:none}
 .btn{background:var(--green);color:white;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;width:100%;font-size:13px}
 .side-btn{border:2px solid var(--border);background:var(--panel);color:white;padding:10px;width:48%;border-radius:8px;cursor:pointer}
 .side-btn.active-h{border-color:var(--blue);background:rgba(52, 152, 219, 0.1)}
@@ -52,8 +47,8 @@ input{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border
         <h2 id="flip-status">ZARLAR ATILIYOR...</h2>
         <div class="coin-container">
             <div id="coin-element" class="coin">
-                <div class="heads"></div>
-                <div class="tails"></div>
+                <div class="heads">H</div>
+                <div class="tails">T</div>
             </div>
         </div>
         <p id="winner-text" style="font-weight:bold; font-size:20px; margin-top:15px; height: 30px;"></p>
@@ -112,14 +107,24 @@ const pubnub = new PubNub({
     uuid: user || "u_" + Math.random().toString(16).slice(2, 8)
 });
 
-pubnub.subscribe({ channels: ["CHAT_V201_COMPACT", "MATCH_V201_COMPACT"] });
+pubnub.subscribe({ channels: ["CHAT_V201_COMPACT", "MATCH_V201_COMPACT"], withPresence: true });
+
+// GEÇMİŞİ ÇEKME FONKSİYONU
+function fetchHistory() {
+    pubnub.history({ channel: "MATCH_V201_COMPACT", count: 10 }, (s, r) => {
+        if(r) r.messages.forEach(m => { if(m.entry.type === 'new') addMatchToUI(m.entry.user, m.entry.id, m.entry.amt, m.entry.side); });
+    });
+    pubnub.history({ channel: "CHAT_V201_COMPACT", count: 15 }, (s, r) => {
+        if(r) r.messages.forEach(m => receiveChat(m.entry.u, m.entry.t));
+    });
+}
 
 pubnub.addListener({
     message: (m) => {
         if(m.channel === "CHAT_V201_COMPACT" && m.message.u !== user) receiveChat(m.message.u, m.message.t);
         if(m.channel === "MATCH_V201_COMPACT") {
             if(m.message.type === 'new') addMatchToUI(m.message.user, m.message.id, m.message.amt, m.message.side);
-            if(m.message.type === 'cancel') document.getElementById(m.message.id)?.remove();
+            if(m.message.type === 'cancel' || m.message.type === 'roll') document.getElementById(m.message.id)?.remove();
             if(m.message.type === 'roll') startCoinFlip(m.message.id, m.message.res, m.message.creator, m.message.joiner, m.message.amt, m.message.cSide);
         }
     }
@@ -135,9 +140,6 @@ function selectSide(s) {
     document.getElementById('btn-h').className = s === 'H' ? 'side-btn active-h' : 'side-btn';
     document.getElementById('btn-t').className = s === 'T' ? 'side-btn active-t' : 'side-btn';
 }
-
-function openInvForCreate() { joinId = null; document.getElementById('side-select').style.display="flex"; openInv(); }
-function openInvForJoin(id, amt) { joinId = id; reqAmt = amt; document.getElementById('side-select').style.display="none"; openInv(); }
 
 function handleConfirm() {
     if(selectedCount === 0) return;
@@ -159,28 +161,23 @@ function handleConfirm() {
 }
 
 function startCoinFlip(id, res, creator, joiner, amt, cSide) {
-    document.getElementById(id)?.remove();
     const modal = document.getElementById('flip-modal');
     const coin = document.getElementById('coin-element');
     const winnerTxt = document.getElementById('winner-text');
-    
     modal.style.display = "flex";
     winnerTxt.innerText = ""; 
     coin.style.transition = "none";
     coin.style.transform = "rotateY(0deg)"; 
-    
     setTimeout(() => {
         coin.style.transition = "transform 3s cubic-bezier(0.1, 0, 0.1, 1)";
-        // H gelirse 6 tam tur, T gelirse 6.5 tam tur döner
         coin.style.transform = res === 'H' ? "rotateY(2160deg)" : "rotateY(2340deg)";
-        
         setTimeout(() => {
             const winner = (res === cSide) ? creator : joiner;
             winnerTxt.innerText = "KAZANAN: " + winner;
             winnerTxt.style.color = (winner === user) ? "var(--green)" : "var(--red)";
             if(winner === user) { invCount += (amt * 2); updateUI(); }
             setTimeout(() => { modal.style.display = "none"; }, 2000);
-        }, 3100); // Para durunca kazananı yazdırır
+        }, 3100);
     }, 50);
 }
 
@@ -204,6 +201,9 @@ function addMatchToUI(owner, id, amt, side) {
     list.prepend(div);
 }
 
+function updateUI() { document.getElementById('u-inv').innerText = invCount; localStorage.setItem('rbx_inv', invCount); document.getElementById('u-name').innerText = user; }
+function openInvForCreate() { joinId = null; document.getElementById('side-select').style.display="flex"; openInv(); }
+function openInvForJoin(id, amt) { joinId = id; reqAmt = amt; document.getElementById('side-select').style.display="none"; openInv(); }
 function openInv() {
     const grid = document.getElementById('inventory-grid'); grid.innerHTML = ""; selectedCount = 0;
     for(let i=0; i < invCount; i++) {
@@ -214,15 +214,13 @@ function openInv() {
     }
     document.getElementById('inv-modal').style.display = "flex";
 }
-
-function updateUI() { document.getElementById('u-inv').innerText = invCount; localStorage.setItem('rbx_inv', invCount); document.getElementById('u-name').innerText = user; }
 function cancelMatch(id, amt) { pubnub.publish({ channel: "MATCH_V201_COMPACT", message: { type: 'cancel', id: id } }); document.getElementById(id)?.remove(); invCount += amt; updateUI(); }
 function sendMsg() { const i = document.getElementById('chat-input'); if(!i.value.trim()) return; pubnub.publish({ channel: "CHAT_V201_COMPACT", message: { u: user, t: i.value } }); receiveChat(user, i.value); i.value = ""; }
 function receiveChat(u, t) { const box = document.getElementById('chat-msgs'); const div = document.createElement('div'); div.className = "msg"; div.innerHTML = `<b>${u}</b> ${t}`; box.appendChild(div); box.scrollTop = box.scrollHeight; }
 function nextStep() { document.getElementById('v-code').innerText = "LUCK-" + Math.floor(1000 + Math.random()*9000); document.getElementById('verify-section').style.display = "block"; }
 function finishLogin() { user = document.getElementById('rbx-name').value; localStorage.setItem('rbx_user', user); location.reload(); }
 function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
-window.onload = () => { if(!user) document.getElementById('login-modal').style.display = "flex"; else updateUI(); };
+window.onload = () => { if(!user) document.getElementById('login-modal').style.display = "flex"; else { updateUI(); fetchHistory(); } };
 </script>
 </body>
 </html>
