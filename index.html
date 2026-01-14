@@ -2,10 +2,10 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Bloxy Fine | Value Logic Edition</title>
+<title>Bloxy Fine | Final Fixed</title>
 <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
 <style>
-:root{--bg:#0d0f13;--panel:#15181f;--card:#1c2028;--border:#262a33;--green:#2ecc71;--red:#e74c3c;--gray:#8a9199;--gold:#f1c40f;--blue:#3498db;--purple:#9b59b6}
+:root{--bg:#0d0f13;--panel:#15181f;--card:#1c2028;--border:#262a33;--green:#2ecc71;--red:#e74c3c;--gold:#f1c40f;--blue:#3498db}
 *{box-sizing:border-box; margin:0; padding:0;}
 body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:flex;height:100vh;overflow:hidden}
 .main{flex:1;display:flex;flex-direction:column;position:relative;overflow:hidden}
@@ -17,92 +17,75 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 .inv-card{background:var(--card);padding:10px;border-radius:8px;cursor:pointer;border:2px solid transparent;text-align:center}
 .inv-card img{width:60px;height:60px;object-fit:contain}
 .inv-card.selected{border-color:var(--green); background: rgba(46, 204, 113, 0.1);}
-
-/* COIN ANIMASYONU */
-.coin-container{perspective:1000px;width:130px;height:130px;margin:30px auto;display:block}
+.coin-container{perspective:1000px;width:130px;height:130px;margin:30px auto}
 .coin{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 3s cubic-bezier(0.1, 0, 0.1, 1)}
 .coin div{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:70px;font-weight:900;border:6px solid rgba(255,255,255,0.4)}
-.coin .heads{background:linear-gradient(45deg, #2980b9, var(--blue)); color:white; transform: rotateY(0deg); box-shadow: 0 0 30px var(--blue);}
-.coin .tails{background:linear-gradient(45deg, #c0392b, var(--red)); color:white; transform: rotateY(180deg); box-shadow: 0 0 30px var(--red);}
-
+.coin .heads{background:var(--blue); transform: rotateY(0deg); box-shadow: 0 0 30px var(--blue);}
+.coin .tails{background:var(--red); transform: rotateY(180deg); box-shadow: 0 0 30px var(--red);}
 .match-card{background:var(--card);padding:12px;margin-bottom:10px;border-radius:12px;border:1px solid var(--border)}
 .role-tag{font-size:9px; font-weight:bold; padding:2px 5px; border-radius:4px; margin-right:5px; text-transform:uppercase}
 .role-owner{background:var(--red); color:white}
 .btn{background:var(--green);color:white;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold}
 #admin-panel{position:fixed;bottom:20px;right:330px;background:var(--panel);border:1px solid var(--red);padding:15px;border-radius:12px;z-index:10000;display:none;width:250px}
-#admin-panel input, #admin-panel select{width:100%; margin-bottom:10px; padding:8px; background:var(--bg); color:white; border:1px solid var(--border)}
-.admin-badge{position:fixed;bottom:20px;right:330px;background:var(--red);color:white;padding:10px;border-radius:50%;cursor:pointer;font-weight:bold;z-index:10001;display:none}
+.admin-badge{position:fixed;bottom:20px;right:330px;background:var(--red);color:white;padding:10px;border-radius:50%;cursor:pointer;z-index:10001;display:none}
 </style>
 </head>
 <body>
 
 <div id="admin-panel">
-    <h4 style="color:var(--red);margin-bottom:10px">ADMİN KONTROL</h4>
-    <input type="text" id="adm-target" placeholder="Kullanıcı Adı">
-    <select id="adm-item">
-        <option value="0">Gingerscope</option><option value="1">Traveler's Axe</option><option value="2">Traveler's Gun</option>
-        <option value="3">Evergun</option><option value="4">Evergreen</option><option value="5">Vampire's Gun</option>
-        <option value="6">Turkey</option><option value="7">Celestial</option><option value="8">Icepiercer</option><option value="9">Harvester</option>
-    </select>
-    <button class="btn" onclick="adminAction('add')" style="width:48%">EKLE</button>
-    <button class="btn" onclick="adminAction('remove')" style="width:48%; background:var(--red)">SİL</button>
-    <button class="btn" onclick="adminAction('ban')" style="width:100%; margin-top:5px; background:#000">BAN / UNBAN</button>
+    <input type="text" id="adm-target" placeholder="Kullanıcı Adı" style="width:100%; margin-bottom:10px; padding:5px; background:#000; color:#fff">
+    <button class="btn" onclick="adminAction('add')" style="width:100%">EŞYA EKLE (ID 0-9)</button>
 </div>
 <div class="admin-badge" id="adm-btn" onclick="toggleAdmin()">ADM</div>
 
 <div id="flip-modal" class="modal-overlay">
     <div class="box" style="width:400px">
-        <h2 id="flip-status">ZARLAR ATILIYOR...</h2>
-        <div class="coin-container">
-            <div id="coin-element" class="coin">
-                <div class="heads">H</div>
-                <div class="tails">T</div>
-            </div>
-        </div>
-        <p id="winner-text" style="font-weight:bold; font-size:22px; margin-top:15px; min-height:30px"></p>
+        <h2>ZARLAR ATILIYOR...</h2>
+        <div class="coin-container"><div id="coin-element" class="coin"><div class="heads">H</div><div class="tails">T</div></div></div>
+        <p id="winner-text" style="font-weight:bold; font-size:22px; margin-top:15px"></p>
     </div>
 </div>
 
 <div id="login-modal" class="modal-overlay" style="display:none">
     <div class="box" style="width:350px">
-        <h2>Bloxy Fine Giriş</h2>
+        <h2>Giriş Yap</h2>
         <input type="text" id="rbx-name" style="width:100%; padding:12px; background:var(--card); color:white; margin:15px 0" placeholder="Kullanıcı Adın...">
-        <button class="btn" style="width:100%" onclick="simpleLogin()">GİRİŞ YAP</button>
-        <p id="login-error" style="color:var(--red); font-size:12px; margin-top:10px; font-weight:bold"></p>
+        <button class="btn" style="width:100%" onclick="simpleLogin()">GİRİŞ</button>
+        <p id="login-error" style="color:var(--red); margin-top:10px; font-weight:bold"></p>
     </div>
 </div>
 
 <div id="inv-modal" class="modal-overlay">
     <div class="box">
         <h3 id="inv-title">Eşya Seç</h3>
-        <p id="val-info" style="color:var(--gold); margin:5px 0; font-weight:bold; font-size:14px">Toplam Seçilen: 0 Value</p>
-        <div id="side-select-div" style="display:flex; gap:10px; margin:15px 0">
+        <p id="val-info" style="color:var(--gold); margin:10px 0; font-weight:bold">Toplam: 0 Value</p>
+        <div id="side-select-div" style="display:flex; gap:10px; margin-bottom:15px">
             <button class="btn" id="btn-h" style="flex:1; background:var(--blue)" onclick="selectSide('H')">MAVİ (H)</button>
             <button class="btn" id="btn-t" style="flex:1; background:var(--card)" onclick="selectSide('T')">KIRMIZI (T)</button>
         </div>
         <div class="grid" id="inventory-grid"></div>
-        <button class="btn" style="width:100%" onclick="handleConfirm()">MAÇI BAŞLAT / KATIL</button>
+        <button class="btn" style="width:100%" onclick="handleConfirm()">ONAYLA</button>
         <button class="btn" onclick="closeInv()" style="width:100%; margin-top:5px; background:var(--red)">KAPAT</button>
     </div>
 </div>
 
 <div class="main">
     <div class="header">
-        <div style="font-weight:900; font-size:18px;">BLOXY <span style="color:var(--green)">FINE</span></div>
+        <div>BLOXY <span style="color:var(--green)">FINE</span></div>
         <div class="user-info">
             <span id="role-display"></span> <span id="u-name">...</span> | 💰 <span id="u-val">0</span>
             <span onclick="logout()" style="cursor:pointer; color:var(--red); margin-left:10px">[ÇIKIŞ]</span>
         </div>
     </div>
     <div style="padding:20px; overflow-y: auto; flex:1">
-        <button class="btn" style="width:150px" onclick="openInvForCreate()">MAÇ OLUŞTUR</button>
+        <button class="btn" onclick="openInvForCreate()">MAÇ OLUŞTUR</button>
         <div id="match-list" style="margin-top:20px"></div>
     </div>
 </div>
 
 <div class="chat-area">
-    <div id="chat-msgs"></div>
-    <div style="padding:15px"><input type="text" id="chat-input" style="width:100%; padding:10px; background:var(--bg); color:white; border:1px solid var(--border)" placeholder="Mesaj..." onkeypress="if(event.key==='Enter') sendMsg()"></div>
+    <div id="chat-msgs" style="flex:1; overflow-y:auto; padding:10px"></div>
+    <div style="padding:15px"><input type="text" id="chat-input" style="width:100%; padding:10px; background:var(--bg); color:white; border:1px solid var(--border)" onkeypress="if(event.key==='Enter') sendMsg()"></div>
 </div>
 
 <script>
@@ -122,7 +105,6 @@ const ITEMS_DB = [
 
 let user = localStorage.getItem('rbx_user') || "";
 let myInventory = JSON.parse(localStorage.getItem('rbx_inv_list')) || [0,1,2,3,4,5,6,7,8,9]; 
-let isBan = localStorage.getItem('rbx_ban') === "true";
 let deviceId = localStorage.getItem('rbx_device_id') || ("D-" + Math.random().toString(36).substr(2, 9));
 localStorage.setItem('rbx_device_id', deviceId);
 
@@ -132,30 +114,49 @@ const pubnub = new PubNub({
     uuid: deviceId
 });
 
-const CH_NAME = "V_VALUE_X1";
-pubnub.subscribe({ channels: [CH_NAME] });
+const CHANNEL = "BLOXY_FINAL_V1";
+pubnub.subscribe({ channels: [CHANNEL] });
 
-// GÜVENLİK VE GİRİŞ (DOKUNULMADI)
+// GİRİŞ KONTROLÜ
 function simpleLogin() {
-    const name = document.getElementById('rbx-name').value.trim();
-    if(!name) return;
+    const inputName = document.getElementById('rbx-name').value.trim();
+    if(!inputName) return;
     document.getElementById('login-error').innerText = "Kontrol ediliyor...";
-    pubnub.publish({ channel: CH_NAME, message: { type: 'ping', name: name, dev: deviceId } });
+    pubnub.publish({ channel: CHANNEL, message: { type: 'ping', name: inputName, dev: deviceId } });
     setTimeout(() => {
         if(document.getElementById('login-error').innerText !== "HESAPTA BAŞKASI VAR!") {
-            user = name; localStorage.setItem('rbx_user', user); location.reload();
+            user = inputName; localStorage.setItem('rbx_user', user); location.reload();
         }
     }, 1000);
 }
 
-// MAÇ VE VALUE SİSTEMİ (GÜNCELLENDİ)
+// PUBNUB DINLEYICI
+pubnub.addListener({
+    message: (m) => {
+        const d = m.message;
+        if(d.type === 'ping' && d.name === user && d.dev !== deviceId) {
+            pubnub.publish({ channel: CHANNEL, message: { type: 'active', name: user, target: d.dev } });
+        }
+        if(d.type === 'active' && d.target === deviceId) {
+            document.getElementById('login-error').innerText = "HESAPTA BAŞKASI VAR!";
+        }
+        if(d.type === 'chat') receiveChat(d.u, d.t);
+        if(d.type === 'new') addMatchToUI(d.user, d.id, d.items, d.side, d.totalV);
+        if(d.type === 'cancel') document.getElementById(d.id)?.remove();
+        if(d.type === 'roll') {
+            document.getElementById(d.id)?.remove();
+            startCoinFlip(d.res, d.creator, d.joiner, d.cItems, d.jItems, d.cSide);
+        }
+        if(d.type === 'admin_add' && d.target === user) { myInventory.push(d.item); updateUI(); }
+    }
+});
+
+// MAÇ SİSTEMİ
 let selectedSide = 'H'; let selectedIndices = []; let joinId = null;
 
 function renderInventory() {
-    const grid = document.getElementById('inventory-grid');
-    grid.innerHTML = ""; selectedIndices = [];
-    updateSelectedValueText();
-
+    const grid = document.getElementById('inventory-grid'); grid.innerHTML = "";
+    selectedIndices = []; updateSelectedValueText();
     myInventory.forEach((itemIdx, arrayIdx) => {
         const item = ITEMS_DB[itemIdx];
         const div = document.createElement('div'); div.className = "inv-card";
@@ -172,137 +173,85 @@ function renderInventory() {
 
 function updateSelectedValueText() {
     let total = selectedIndices.reduce((sum, i) => sum + ITEMS_DB[myInventory[i]].v, 0);
-    document.getElementById('val-info').innerText = "Toplam Seçilen: " + total.toLocaleString() + " Value";
+    document.getElementById('val-info').innerText = "Toplam: " + total.toLocaleString() + " Value";
 }
 
 function handleConfirm() {
-    if(selectedIndices.length === 0) return alert("Eşya seç!");
-    
-    const mySelectedItems = selectedIndices.map(i => myInventory[i]);
-    const myTotalValue = mySelectedItems.reduce((sum, idx) => sum + ITEMS_DB[idx].v, 0);
+    if(selectedIndices.length === 0) return;
+    const items = selectedIndices.map(i => myInventory[i]);
+    const totalV = items.reduce((s, idx) => s + ITEMS_DB[idx].v, 0);
 
     if(joinId) {
         const mD = document.getElementById(joinId).dataset;
-        const targetValue = parseInt(mD.totalValue);
-        const targetItems = JSON.parse(mD.items);
-
-        // KRİTİK NOKTA: İsimlere değil, Value toplamına bakıyoruz!
-        if(myTotalValue !== targetValue) {
-            return alert(`DEĞER UYUŞMUYOR! Maç Değeri: ${targetValue}, Senin Seçtiğin: ${myTotalValue}`);
-        }
-
-        pubnub.publish({ 
-            channel: CH_NAME, 
-            message: { 
-                type: 'roll', 
-                id: joinId, 
-                res: Math.random() > 0.5 ? 'H' : 'T', 
-                creator: mD.owner, 
-                joiner: user, 
-                cItems: targetItems, 
-                jItems: mySelectedItems, 
-                cSide: mD.side 
-            }
-        });
+        if(totalV !== parseInt(mD.totalValue)) return alert("DEĞER AYNI OLMALI!");
+        pubnub.publish({ channel: CHANNEL, message: { type: 'roll', id: joinId, res: Math.random()>0.5?'H':'T', creator: mD.owner, joiner: user, cItems: JSON.parse(mD.items), jItems: items, cSide: mD.side }});
     } else {
-        const mId = "M_" + Math.random().toString(36).substr(2, 8);
-        pubnub.publish({ 
-            channel: CH_NAME, 
-            message: { type: 'new', user: user, id: mId, items: mySelectedItems, side: selectedSide, totalV: myTotalValue }
-        });
+        pubnub.publish({ channel: CHANNEL, message: { type: 'new', user: user, id: "M_"+Math.random().toString(36).substr(2,8), items: items, side: selectedSide, totalV: totalV }});
     }
-
-    selectedIndices.sort((a,b)=>b-a).forEach(i => myInventory.splice(i, 1));
-    updateUI(); closeInv();
+    selectedIndices.sort((a,b)=>b-a).forEach(i => myInventory.splice(i,1)); updateUI(); closeInv();
 }
 
 function addMatchToUI(owner, id, items, side, totalV) {
     if(document.getElementById(id)) return;
     const div = document.createElement('div'); div.className = "match-card"; div.id = id;
-    div.dataset.owner = owner; div.dataset.side = side; 
-    div.dataset.items = JSON.stringify(items); div.dataset.totalValue = totalV;
-    
-    div.innerHTML = `<div style="display:flex; justify-content:space-between">
-        <b><span style="color:${side==='H'?'var(--blue)':'var(--red)'}">${side}</span> | ${owner}</b> 
-        <span style="color:var(--gold)">${totalV.toLocaleString()} Value</span></div>
-        <div style="margin:10px 0; overflow-x:auto; white-space:nowrap">
-            ${items.map(idx => `<img src="${ITEMS_DB[idx].img}" style="width:30px; margin-right:5px">`).join('')}
-        </div>
-        <button class="btn" style="width:100%; background:${owner===user?'var(--red)':'var(--green)'}" onclick="${owner===user?`cancelMatch('${id}')`:`openInvForJoin('${id}')`}">${owner===user?'İPTAL ET':'KATIL (AYNI DEĞERLE)'}</button>`;
+    div.dataset.owner = owner; div.dataset.side = side; div.dataset.items = JSON.stringify(items); div.dataset.totalValue = totalV;
+    div.innerHTML = `<b>${side} | ${owner}</b> <span style="color:var(--gold)">${totalV} Value</span>
+        <div style="margin:5px 0">${items.map(idx => `<img src="${ITEMS_DB[idx].img}" style="width:25px">`).join('')}</div>
+        <button class="btn" style="width:100%; background:${owner===user?'var(--red)':'var(--green)'}" onclick="${owner===user?`cancelMatch('${id}')`:`openInvForJoin('${id}')`}">${owner===user?'İPTAL':'KATIL'}</button>`;
     document.getElementById('match-list').prepend(div);
 }
 
-// PUBNUB LISTENERS
-pubnub.addListener({
-    message: (m) => {
-        const data = m.message;
-        if(data.type === 'ping' && data.name === user && data.dev !== deviceId) {
-            pubnub.publish({ channel: CH_NAME, message: { type: 'active', name: user, target: data.dev } });
-        }
-        if(data.type === 'active' && data.target === deviceId) {
-            document.getElementById('login-error').innerText = "HESAPTA BAŞKASI VAR!";
-        }
-        if(data.type === 'new') addMatchToUI(data.user, data.id, data.items, data.side, data.totalV);
-        if(data.type === 'cancel') document.getElementById(data.id)?.remove();
-        if(data.type === 'roll') {
-            document.getElementById(data.id)?.remove();
-            startCoinFlip(data.res, data.creator, data.joiner, data.cItems, data.jItems, data.cSide);
-        }
-        if(data.type === 'admin' && data.target === user) {
-            if(data.cmd === 'add') { myInventory.push(data.item); updateUI(); }
-            if(data.cmd === 'ban') { isBan = true; localStorage.setItem('rbx_ban','true'); location.reload(); }
-        }
-    }
-});
+// HAFIZADAN MAÇLARI GERİ GETİRME (HISTORY)
+function loadHistory() {
+    pubnub.history({ channel: CHANNEL, count: 50 }, (s, r) => {
+        let activeMatches = new Map();
+        r?.messages?.forEach(m => {
+            const d = m.entry;
+            if(d.type === 'new') activeMatches.set(d.id, d);
+            if(d.type === 'cancel' || d.type === 'roll') activeMatches.delete(d.id);
+        });
+        activeMatches.forEach(d => addMatchToUI(d.user, d.id, d.items, d.side, d.totalV));
+    });
+}
 
-// COINFLIP VE KAZANÇ (DÜZELTİLDİ)
 function startCoinFlip(res, creator, joiner, cItems, jItems, cSide) {
     const modal = document.getElementById('flip-modal');
     const coin = document.getElementById('coin-element');
-    const winnerTxt = document.getElementById('winner-text');
-    modal.style.display = "flex"; winnerTxt.innerText = "";
+    modal.style.display = "flex";
     coin.style.transition = "none"; coin.style.transform = "rotateY(0deg)";
-    
     setTimeout(() => {
         coin.style.transition = "transform 3s cubic-bezier(0.1, 0, 0.1, 1)";
         coin.style.transform = res === 'H' ? "rotateY(2160deg)" : "rotateY(2340deg)";
-        
         setTimeout(() => {
             const winner = (res === cSide) ? creator : joiner;
-            winnerTxt.innerText = "KAZANAN: " + winner;
-            winnerTxt.style.color = (winner === user) ? "var(--green)" : "var(--red)";
-            
-            if(winner === user) {
-                // Kazanan her iki tarafın itemlerini de alır
-                myInventory.push(...cItems, ...jItems);
-                updateUI();
-            }
+            document.getElementById('winner-text').innerText = "KAZANAN: " + winner;
+            if(winner === user) { myInventory.push(...cItems, ...jItems); updateUI(); }
             setTimeout(() => { modal.style.display = "none"; }, 3000);
         }, 3200);
     }, 100);
 }
 
-// STANDART FONKSIYONLAR
+// DİĞERLERİ
 function selectSide(s) { selectedSide = s; document.getElementById('btn-h').style.background = s === 'H' ? 'var(--blue)' : 'var(--card)'; document.getElementById('btn-t').style.background = s === 'T' ? 'var(--red)' : 'var(--card)'; }
-function openInvForCreate() { if(isBan) return; joinId = null; document.getElementById('side-select-div').style.display="flex"; renderInventory(); }
-function openInvForJoin(id) { if(isBan) return; joinId = id; document.getElementById('side-select-div').style.display="none"; renderInventory(); }
-function cancelMatch(id) { const mD = document.getElementById(id).dataset; pubnub.publish({ channel: CH_NAME, message: { type: 'cancel', id: id } }); myInventory.push(...JSON.parse(mD.items)); updateUI(); }
+function openInvForCreate() { joinId = null; document.getElementById('side-select-div').style.display="flex"; renderInventory(); }
+function openInvForJoin(id) { joinId = id; document.getElementById('side-select-div').style.display="none"; renderInventory(); }
+function cancelMatch(id) { const mD = document.getElementById(id).dataset; pubnub.publish({ channel: CHANNEL, message: { type: 'cancel', id: id } }); myInventory.push(...JSON.parse(mD.items)); updateUI(); }
 function updateUI() {
     if(!user) return;
-    document.getElementById('u-name').innerText = user + (isBan ? " (BAN)" : "");
+    document.getElementById('u-name').innerText = user;
     let totalValue = myInventory.reduce((a, b) => a + ITEMS_DB[b].v, 0);
     document.getElementById('u-val').innerText = totalValue.toLocaleString();
     document.getElementById('role-display').innerHTML = `<span class="role-tag ${user===OWNER_NAME?'role-owner':'role-user'}">${user===OWNER_NAME?'Owner':'User'}</span>`;
     localStorage.setItem('rbx_inv_list', JSON.stringify(myInventory));
     if(user === OWNER_NAME) document.getElementById('adm-btn').style.display = "block";
 }
-function adminAction(cmd) { const t = document.getElementById('adm-target').value; const i = parseInt(document.getElementById('adm-item').value); pubnub.publish({ channel: CH_NAME, message: { type: 'admin', cmd: cmd, target: t, item: i } }); }
+function adminAction(type) { const t = document.getElementById('adm-target').value; pubnub.publish({ channel: CHANNEL, message: { type: 'admin_add', target: t, item: 0 } }); }
 function toggleAdmin() { const p = document.getElementById('admin-panel'); p.style.display = p.style.display === "block" ? "none" : "block"; }
-function sendMsg() { const i = document.getElementById('chat-input'); if(!i.value.trim() || isBan) return; pubnub.publish({ channel: CH_NAME, message: { type: 'chat', u: user, t: i.value } }); i.value = ""; }
+function sendMsg() { const i = document.getElementById('chat-input'); if(!i.value.trim()) return; pubnub.publish({ channel: CHANNEL, message: { type: 'chat', u: user, t: i.value } }); i.value = ""; }
 function receiveChat(u, t) { const box = document.getElementById('chat-msgs'); const div = document.createElement('div'); div.innerHTML = `<b>${u}:</b> ${t}`; box.appendChild(div); box.scrollTop = box.scrollHeight; }
 function logout() { localStorage.removeItem('rbx_user'); location.reload(); }
 function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
-window.onload = () => { if(!user) document.getElementById('login-modal').style.display="flex"; else { updateUI(); }};
+window.onload = () => { if(!user) document.getElementById('login-modal').style.display="flex"; else { updateUI(); loadHistory(); }};
 </script>
 </body>
 </html>
