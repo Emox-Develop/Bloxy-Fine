@@ -18,15 +18,11 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 .inv-card{background:var(--card);padding:5px;border-radius:8px;cursor:pointer;border:2px solid transparent}
 .inv-card img{width:100%}
 .inv-card.selected{border-color:var(--green); background: rgba(46, 204, 113, 0.1);}
-
-/* PARA ANİMASYONU */
 .coin-container{perspective:1000px;width:130px;height:130px;margin:30px auto;display:block}
 .coin{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 3s cubic-bezier(0.1, 0, 0.1, 1)}
 .coin div{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:70px;font-weight:900;border:6px solid rgba(255,255,255,0.4)}
 .coin .heads{background:linear-gradient(45deg, #2980b9, var(--blue)); color:white; transform: rotateY(0deg); box-shadow: 0 0 30px var(--blue);}
 .coin .tails{background:linear-gradient(45deg, #c0392b, var(--red)); color:white; transform: rotateY(180deg); box-shadow: 0 0 30px var(--red);}
-
-/* MAÇ KARTI VE KÜÇÜLTÜLMÜŞ RESİMLER */
 .match-card{background:var(--card);padding:12px 15px;margin-bottom:10px;border-radius:12px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--border);animation:fadeIn 0.2s}
 .match-top{display:flex; justify-content:space-between; align-items:center}
 .side-icon{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px}
@@ -34,14 +30,12 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 .side-t{background:var(--red);box-shadow:0 0 10px var(--red)}
 .item-display-area{display:flex; flex-wrap:wrap; gap:6px; background:rgba(0,0,0,0.15); padding:8px; border-radius:8px}
 .item-mini-img{width:40px !important; height:40px !important; background:var(--panel); padding:4px; border-radius:6px; border:1px solid var(--border); object-fit: contain;}
-
 #chat-msgs{flex:1;padding:15px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
 .msg{background:var(--card);padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px}
 .msg b{color:var(--green);font-size:10px;display:block}
 .btn{background:var(--green);color:white;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;width:100%;font-size:13px}
 .side-btn{border:2px solid var(--border);background:var(--panel);color:white;padding:10px;width:48%;border-radius:8px;cursor:pointer}
-.side-btn.active-h{border-color:var(--blue);background:rgba(52, 152, 219, 0.1)}
-.side-btn.active-t{border-color:var(--red);background:rgba(231, 76, 60, 0.1)}
+.logout-btn{color:var(--red); cursor:pointer; font-size:11px; margin-left:10px; font-weight:bold; text-decoration:underline}
 </style>
 </head>
 <body>
@@ -62,11 +56,15 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 <div id="login-modal" class="modal-overlay" style="display:none">
     <div class="box">
         <h2>Roblox Giriş</h2>
-        <input type="text" id="rbx-name" placeholder="Kullanıcı Adı...">
-        <button class="btn" onclick="nextStep()">Kodu Al</button>
+        <p style="font-size:12px; color:var(--gray); margin-bottom:10px">Profil açıklamana kodu yazmalısın.</p>
+        <input type="text" id="rbx-name" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:white; margin-bottom:10px" placeholder="Kullanıcı Adı...">
+        <button class="btn" id="gen-btn" onclick="generateCode()">Kod Üret</button>
         <div id="verify-section" style="display:none; margin-top:15px">
-            <h3 id="v-code" style="color:var(--green); margin:10px 0"></h3>
-            <button class="btn" onclick="finishLogin()">Giriş Yap</button>
+            <div style="background:black; padding:10px; border-radius:8px; margin-bottom:10px">
+                <small>Hakkında kısmına bunu yapıştır:</small>
+                <h3 id="v-code" style="color:var(--green)"></h3>
+            </div>
+            <button class="btn" id="verify-btn" onclick="verifyProfile()">DOĞRULA VE GİRİŞ YAP</button>
         </div>
     </div>
 </div>
@@ -88,7 +86,10 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 <div class="main">
     <div class="header">
         <div style="font-weight:900; font-size:18px; letter-spacing: 1px;">BLOXY <span style="color:var(--green)">FINE</span></div>
-        <div class="user-info"><span id="u-name">...</span> | 💰 <span id="u-inv">0</span></div>
+        <div class="user-info">
+            <span id="u-name">...</span> | 💰 <span id="u-inv">0</span>
+            <span class="logout-btn" onclick="logout()">[ÇIKIŞ]</span>
+        </div>
     </div>
     <div style="padding:20px; overflow-y: auto; flex:1">
         <button class="btn" style="width:150px" onclick="openInvForCreate()">MAÇ OLUŞTUR</button>
@@ -104,6 +105,7 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 <script>
 let user = localStorage.getItem('rbx_user') || "";
 let invCount = localStorage.getItem('rbx_inv') ? parseInt(localStorage.getItem('rbx_inv')) : 50;
+let currentCode = "";
 
 const pubnub = new PubNub({
     publishKey: "pub-c-134bcaab-4830-4bbb-afb4-b7595ffffebe",
@@ -113,7 +115,50 @@ const pubnub = new PubNub({
 
 pubnub.subscribe({ channels: ["CHAT_V201_COMPACT", "MATCH_V201_COMPACT"] });
 
-// AKILLI GEÇMİŞ ÇEKME: Sadece bekleyen maçları bulur
+// ROBLOX DOĞRULAMA SİSTEMİ
+async function generateCode() {
+    const name = document.getElementById('rbx-name').value;
+    if(!name) return alert("Lütfen kullanıcı adını yaz!");
+    currentCode = "FINE-" + Math.floor(1000 + Math.random()*9000);
+    document.getElementById('v-code').innerText = currentCode;
+    document.getElementById('verify-section').style.display = "block";
+    document.getElementById('gen-btn').style.display = "none";
+}
+
+async function verifyProfile() {
+    const name = document.getElementById('rbx-name').value;
+    const btn = document.getElementById('verify-btn');
+    btn.innerText = "KONTROL EDİLİYOR...";
+    btn.disabled = true;
+
+    try {
+        // Proxy üzerinden Roblox API'sine bağlanıp profil bilgisini çekiyoruz
+        const res = await fetch(`https://roblox-user-info-proxy.up.railway.app/user/${name}`);
+        const data = await res.json();
+        
+        if (data.description && data.description.includes(currentCode)) {
+            user = name;
+            localStorage.setItem('rbx_user', user);
+            location.reload();
+        } else {
+            alert("Hata: Kodu profil açıklamasında bulamadık! Lütfen tam olarak şunu yaz: " + currentCode);
+            btn.innerText = "TEKRAR DOĞRULA";
+            btn.disabled = false;
+        }
+    } catch (e) {
+        // Proxy çalışmazsa bile güvenli giriş için basit kontrol (Geliştirme aşamasında hata vermemesi için)
+        alert("Bağlantı hatası! Lütfen kodu profilinize eklediğinizden emin olun.");
+        btn.innerText = "TEKRAR DOĞRULA";
+        btn.disabled = false;
+    }
+}
+
+function logout() {
+    localStorage.removeItem('rbx_user');
+    localStorage.removeItem('rbx_inv');
+    location.reload();
+}
+
 function fetchHistory() {
     let tempMatches = new Map();
     pubnub.history({ channel: "MATCH_V201_COMPACT", count: 50 }, (s, r) => {
@@ -142,26 +187,19 @@ pubnub.addListener({
     }
 });
 
-let selectedSide = 'H';
-let selectedCount = 0;
-let joinId = null;
-let reqAmt = 0;
-
+let selectedSide = 'H'; let selectedCount = 0; let joinId = null; let reqAmt = 0;
 function selectSide(s) {
     selectedSide = s;
     document.getElementById('btn-h').className = s === 'H' ? 'side-btn active-h' : 'side-btn';
     document.getElementById('btn-t').className = s === 'T' ? 'side-btn active-t' : 'side-btn';
 }
-
 function handleConfirm() {
     if(selectedCount === 0) return;
     if(joinId) {
         if(selectedCount !== reqAmt) return alert("Hata: " + reqAmt + " eşya seç!");
         const result = Math.random() > 0.5 ? 'H' : 'T';
-        const matchData = document.getElementById(joinId).dataset;
-        pubnub.publish({ channel: "MATCH_V201_COMPACT", message: { 
-            type: 'roll', id: joinId, res: result, creator: matchData.owner, joiner: user, amt: reqAmt, cSide: matchData.side 
-        }});
+        const mD = document.getElementById(joinId).dataset;
+        pubnub.publish({ channel: "MATCH_V201_COMPACT", message: { type: 'roll', id: joinId, res: result, creator: mD.owner, joiner: user, amt: reqAmt, cSide: mD.side }});
         invCount -= selectedCount;
     } else {
         const mId = "M_" + Math.random().toString(36).substr(2, 8);
@@ -171,15 +209,9 @@ function handleConfirm() {
     }
     updateUI(); closeInv();
 }
-
 function startCoinFlip(id, res, creator, joiner, amt, cSide) {
-    const modal = document.getElementById('flip-modal');
-    const coin = document.getElementById('coin-element');
-    const winnerTxt = document.getElementById('winner-text');
-    modal.style.display = "flex";
-    winnerTxt.innerText = ""; 
-    coin.style.transition = "none";
-    coin.style.transform = "rotateY(0deg)"; 
+    const modal = document.getElementById('flip-modal'); const coin = document.getElementById('coin-element'); const winnerTxt = document.getElementById('winner-text');
+    modal.style.display = "flex"; winnerTxt.innerText = ""; coin.style.transition = "none"; coin.style.transform = "rotateY(0deg)"; 
     setTimeout(() => {
         coin.style.transition = "transform 3s cubic-bezier(0.1, 0, 0.1, 1)";
         coin.style.transform = res === 'H' ? "rotateY(2160deg)" : "rotateY(2340deg)";
@@ -192,27 +224,13 @@ function startCoinFlip(id, res, creator, joiner, amt, cSide) {
         }, 3100);
     }, 50);
 }
-
 function addMatchToUI(owner, id, amt, side) {
     if(document.getElementById(id)) return;
-    const list = document.getElementById('match-list');
-    const div = document.createElement('div');
-    div.className = "match-card"; div.id = id;
-    div.dataset.owner = owner; div.dataset.side = side;
-    div.innerHTML = `
-        <div class="match-top">
-            <div class="match-user-info"><span class="side-icon ${side==='H'?'side-h':'side-t'}">${side}</span> <b>${owner}</b></div>
-            <div class="value-tag">💎 ${(amt * 425).toLocaleString()}</div>
-        </div>
-        <div class="item-display-area">${'<img src="https://supremevalues.com/media/mm2ancients/Harvester.png" class="item-mini-img">'.repeat(amt)}</div>
-        <div style="display:flex; justify-content:flex-end">
-            ${owner === user ? `<button class="btn" style="background:var(--red); width:80px" onclick="cancelMatch('${id}', ${amt})">İPTAL</button>` 
-            : `<button class="btn" style="width:80px" onclick="openInvForJoin('${id}', ${amt})">KATIL</button>`}
-        </div>
-    `;
+    const list = document.getElementById('match-list'); const div = document.createElement('div');
+    div.className = "match-card"; div.id = id; div.dataset.owner = owner; div.dataset.side = side;
+    div.innerHTML = `<div class="match-top"><div class="match-user-info"><span class="side-icon ${side==='H'?'side-h':'side-t'}">${side}</span> <b>${owner}</b></div><div class="value-tag">💎 ${(amt * 425).toLocaleString()}</div></div><div class="item-display-area">${'<img src="https://supremevalues.com/media/mm2ancients/Harvester.png" class="item-mini-img">'.repeat(amt)}</div><div style="display:flex; justify-content:flex-end">${owner === user ? `<button class="btn" style="background:var(--red); width:80px" onclick="cancelMatch('${id}', ${amt})">İPTAL</button>` : `<button class="btn" style="width:80px" onclick="openInvForJoin('${id}', ${amt})">KATIL</button>`}</div>`;
     list.prepend(div);
 }
-
 function updateUI() { document.getElementById('u-inv').innerText = invCount; localStorage.setItem('rbx_inv', invCount); document.getElementById('u-name').innerText = user; }
 function openInvForCreate() { joinId = null; document.getElementById('side-select').style.display="flex"; openInv(); }
 function openInvForJoin(id, amt) { joinId = id; reqAmt = amt; document.getElementById('side-select').style.display="none"; openInv(); }
@@ -229,8 +247,6 @@ function openInv() {
 function cancelMatch(id, amt) { pubnub.publish({ channel: "MATCH_V201_COMPACT", message: { type: 'cancel', id: id } }); document.getElementById(id)?.remove(); invCount += amt; updateUI(); }
 function sendMsg() { const i = document.getElementById('chat-input'); if(!i.value.trim()) return; pubnub.publish({ channel: "CHAT_V201_COMPACT", message: { u: user, t: i.value } }); receiveChat(user, i.value); i.value = ""; }
 function receiveChat(u, t) { const box = document.getElementById('chat-msgs'); const div = document.createElement('div'); div.className = "msg"; div.innerHTML = `<b>${u}</b> ${t}`; box.appendChild(div); box.scrollTop = box.scrollHeight; }
-function nextStep() { document.getElementById('v-code').innerText = "LUCK-" + Math.floor(1000 + Math.random()*9000); document.getElementById('verify-section').style.display = "block"; }
-function finishLogin() { user = document.getElementById('rbx-name').value; localStorage.setItem('rbx_user', user); location.reload(); }
 function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
 window.onload = () => { if(!user) document.getElementById('login-modal').style.display = "flex"; else { updateUI(); fetchHistory(); } };
 </script>
