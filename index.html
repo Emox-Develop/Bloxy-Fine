@@ -13,12 +13,10 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 .header{height:65px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 30px;justify-content:space-between}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:none;align-items:center;justify-content:center}
 .box{background:var(--panel);padding:25px;border-radius:15px;width:600px;text-align:center;border:1px solid var(--border)}
-.grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin:15px 0;max-height:400px;overflow-y:auto;padding:10px;background:rgba(0,0,0,0.2);border-radius:10px}
+.grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin:15px 0;max-height:350px;overflow-y:auto;padding:10px;background:rgba(0,0,0,0.2);border-radius:10px}
 .inv-card{background:var(--card);padding:10px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:0.2s;text-align:center}
-.inv-card:hover{background:#252a35}
-.inv-card img{width:60px;height:60px;object-fit:contain;margin-bottom:5px}
+.inv-card img{width:50px;height:50px;object-fit:contain;margin-bottom:5px}
 .inv-card.selected{border-color:var(--green); background: rgba(46, 204, 113, 0.1);}
-.inv-card p{font-size:10px; color:var(--gray)}
 .inv-card b{font-size:11px; display:block; color:#fff}
 .coin-container{perspective:1000px;width:130px;height:130px;margin:30px auto;display:block}
 .coin{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 3s cubic-bezier(0.1, 0, 0.1, 1)}
@@ -27,6 +25,9 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 .coin .tails{background:linear-gradient(45deg, #c0392b, var(--red)); color:white; transform: rotateY(180deg); box-shadow: 0 0 30px var(--red);}
 .match-card{background:var(--card);padding:15px;margin-bottom:12px;border-radius:12px;border:1px solid var(--border);animation:fadeIn 0.3s}
 .match-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
+.side-btn{flex:1; padding:10px; border:1px solid var(--border); background:var(--card); color:white; cursor:pointer; border-radius:8px; font-weight:bold}
+.btn-h-active{background:var(--blue) !important; border-color:white !important}
+.btn-t-active{background:var(--red) !important; border-color:white !important}
 .role-tag{font-size:9px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:5px; text-transform:uppercase}
 .role-owner{background:var(--red); color:white}
 .role-user{background:var(--gray); color:white}
@@ -38,10 +39,10 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 <body>
 
 <div id="flip-modal" class="modal-overlay">
-    <div class="box">
+    <div class="box" style="width:400px">
         <h2 id="flip-status">ZARLAR ATILIYOR...</h2>
         <div class="coin-container"><div id="coin-element" class="coin"><div class="heads">H</div><div class="tails">T</div></div></div>
-        <p id="winner-text" style="font-weight:bold; font-size:20px;"></p>
+        <p id="winner-text" style="font-weight:bold; font-size:20px; min-height:30px"></p>
     </div>
 </div>
 
@@ -55,7 +56,11 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 
 <div id="inv-modal" class="modal-overlay">
     <div class="box">
-        <h3>Eşya Seç (Min 1)</h3>
+        <h3>Eşya Seç & Tarafını Belirle</h3>
+        <div style="display:flex; gap:10px; margin-top:15px">
+            <button class="side-btn btn-h-active" id="create-h" onclick="selectSide('H')">HEADS (MAVİ)</button>
+            <button class="side-btn" id="create-t" onclick="selectSide('T')">TAILS (KIRMIZI)</button>
+        </div>
         <div class="grid" id="inventory-grid"></div>
         <div style="display:flex; gap:10px">
             <button class="btn" onclick="handleConfirm()">MAÇI ONAYLA</button>
@@ -94,7 +99,7 @@ const ITEMS = [
     {n: "Traveler's Gun", v: 4100, img: "https://supremevalues.com/media/mm2ancients/Traveler's_Gun.png"},
     {n: "Evergun", v: 4100, img: "https://supremevalues.com/media/mm2ancients/Evergun.png"},
     {n: "Evergreen", v: 3100, img: "https://supremevalues.com/media/mm2ancients/Evergreen.png"},
-    {n: "Vampire's Gun", v: 1800, img: "https://supremevalues.com/media/mm2ancients/Vampire's_Gun.png"},
+    {n: "Vampire's Gun", v: 1800, img: "https://supremevalues.com/media/mm2ancients/Vampires_Gun.png"},
     {n: "Turkey", v: 1800, img: "https://supremevalues.com/media/mm2ancients/Turkey.png"},
     {n: "Celestial", v: 1800, img: "https://supremevalues.com/media/mm2ancients/Celestial.png"},
     {n: "Icepiercer", v: 350, img: "https://supremevalues.com/media/mm2ancients/Icepiercer.png"},
@@ -102,7 +107,7 @@ const ITEMS = [
 ];
 
 let user = localStorage.getItem('rbx_user') || "";
-let myInventory = JSON.parse(localStorage.getItem('rbx_inv_list')) || [0,1,2,3,4,5,6,7,8,9]; // Başlangıç eşyaları
+let myInventory = JSON.parse(localStorage.getItem('rbx_inv_list')) || [0,1,2,3,4,5,6,7,8,9];
 
 const pubnub = new PubNub({
     publishKey: "pub-c-134bcaab-4830-4bbb-afb4-b7595ffffebe",
@@ -110,23 +115,15 @@ const pubnub = new PubNub({
     uuid: user || "guest_" + Math.random()
 });
 
-pubnub.subscribe({ channels: ["CHAT_V3", "MATCH_V3", "PRESENCE_V3"] });
+pubnub.subscribe({ channels: ["CHAT_V4", "MATCH_V4", "PRESENCE_V4"] });
 
-// TEK KİŞİ GİRİŞ KONTROLÜ
-async function checkAndLogin() {
+function checkAndLogin() {
     const name = document.getElementById('rbx-name').value.trim();
     if(!name) return;
-    
-    pubnub.hereNow({ channels: ["PRESENCE_V3"] }, (s, r) => {
-        const activeUsers = r.channels["PRESENCE_V3"]?.occupants.map(o => o.state?.name) || [];
-        if(activeUsers.includes(name)) {
-            alert("Bu hesap şu an başka bir cihazda aktif!");
-        } else {
-            user = name;
-            localStorage.setItem('rbx_user', user);
-            pubnub.setState({ state: { name: user }, channels: ["PRESENCE_V3"] });
-            location.reload();
-        }
+    pubnub.hereNow({ channels: ["PRESENCE_V4"] }, (s, r) => {
+        const active = r.channels["PRESENCE_V4"]?.occupants.map(o => o.state?.name) || [];
+        if(active.includes(name)) { alert("Bu hesap aktif!"); }
+        else { user = name; localStorage.setItem('rbx_user', user); location.reload(); }
     });
 }
 
@@ -138,12 +135,115 @@ function updateUI() {
     localStorage.setItem('rbx_inv_list', JSON.stringify(myInventory));
 }
 
-// MATCH VE CHAT KALICILIĞI (HISTORY)
-function fetchHistory() {
-    pubnub.history({ channel: "CHAT_V3", count: 20 }, (s, r) => {
-        r?.messages?.forEach(m => receiveChat(m.entry.u, m.entry.t));
+let selectedIdxs = []; let currentSide = 'H';
+function selectSide(s) {
+    currentSide = s;
+    document.getElementById('create-h').classList.toggle('btn-h-active', s === 'H');
+    document.getElementById('create-t').classList.toggle('btn-t-active', s === 'T');
+}
+
+function openInvForCreate() {
+    const grid = document.getElementById('inventory-grid'); grid.innerHTML = ""; selectedIdxs = [];
+    myInventory.forEach((itemIdx, arrPos) => {
+        const div = document.createElement('div'); div.className = "inv-card";
+        div.innerHTML = `<img src="${ITEMS[itemIdx].img}"><b>${ITEMS[itemIdx].n}</b>`;
+        div.onclick = () => {
+            div.classList.toggle('selected');
+            const pos = selectedIdxs.indexOf(arrPos);
+            if(pos > -1) selectedIdxs.splice(pos, 1); else selectedIdxs.push(arrPos);
+        };
+        grid.appendChild(div);
     });
-    pubnub.history({ channel: "MATCH_V3", count: 50 }, (s, r) => {
+    document.getElementById('inv-modal').style.display = "flex";
+}
+
+function handleConfirm() {
+    if(selectedIdxs.length === 0) return;
+    const mId = "M_" + Math.random().toString(36).substr(2, 9);
+    const itemIndices = selectedIdxs.map(i => myInventory[i]);
+    pubnub.publish({ channel: "MATCH_V4", message: { type: 'new', user: user, id: mId, items: itemIndices, side: currentSide }});
+    selectedIdxs.sort((a,b)=>b-a).forEach(i => myInventory.splice(i, 1));
+    updateUI(); closeInv();
+}
+
+function addMatchToUI(owner, id, itemIndices, side) {
+    if(document.getElementById(id)) return;
+    const totalVal = itemIndices.reduce((a, b) => a + ITEMS[b].v, 0);
+    const html = `<div class="match-card" id="${id}" data-items='${JSON.stringify(itemIndices)}' data-side="${side}" data-owner="${owner}">
+        <div class="match-top"><b><span style="color:${side==='H'?'var(--blue)':'var(--red)'}">[${side}]</span> ${owner}</b> <span>${totalVal.toLocaleString()} Val</span></div>
+        <div style="display:flex; gap:5px; margin-bottom:10px">${itemIndices.map(i => `<img src="${ITEMS[i].img}" style="width:35px; background:var(--panel); border-radius:4px">`).join('')}</div>
+        <button class="btn" onclick="joinMatch('${id}')">${owner === user ? 'İPTAL ET' : 'KATIL'}</button>
+    </div>`;
+    document.getElementById('match-list').insertAdjacentHTML('afterbegin', html);
+}
+
+function joinMatch(id) {
+    const el = document.getElementById(id);
+    const mData = el.dataset;
+    const targetItems = JSON.parse(mData.items);
+    const targetVal = targetItems.reduce((a, b) => a + ITEMS[b].v, 0);
+
+    if(mData.owner === user) {
+        pubnub.publish({ channel: "MATCH_V4", message: { type: 'cancel', id: id }});
+        myInventory.push(...targetItems); updateUI(); return;
+    }
+
+    let myTotalVal = myInventory.reduce((a, b) => a + ITEMS[b].v, 0);
+    if(myTotalVal < targetVal) return alert("Value yetersiz!");
+
+    // Karşı taraf katıldığında rastgele sonuç ve animasyon başlar
+    const res = Math.random() > 0.5 ? 'H' : 'T';
+    pubnub.publish({ channel: "MATCH_V4", message: { 
+        type: 'roll', id: id, res: res, creator: mData.owner, joiner: user, items: targetItems, cSide: mData.side 
+    }});
+}
+
+function startFlipAnim(res, creator, joiner, items, cSide) {
+    const modal = document.getElementById('flip-modal');
+    const coin = document.getElementById('coin-element');
+    const winnerTxt = document.getElementById('winner-text');
+    
+    modal.style.display = "flex"; winnerTxt.innerText = "";
+    coin.style.transition = "none"; coin.style.transform = "rotateY(0deg)";
+
+    setTimeout(() => {
+        coin.style.transition = "transform 3s cubic-bezier(0.1, 0, 0.1, 1)";
+        coin.style.transform = res === 'H' ? "rotateY(2160deg)" : "rotateY(2340deg)";
+        
+        setTimeout(() => {
+            const winner = (res === cSide) ? creator : joiner;
+            winnerTxt.innerText = "KAZANAN: " + winner;
+            winnerTxt.style.color = (winner === user) ? "var(--green)" : "var(--red)";
+            
+            // KAZANMA MANTIĞI: Kazanan tüm eşyaları alır
+            if(winner === user) {
+                // Kazanan kendi koyduğu değeri (items kadar) ve rakibin koyduğu değeri alır
+                myInventory.push(...items, ...items); 
+                updateUI();
+            }
+            
+            setTimeout(() => { modal.style.display = "none"; }, 2000);
+        }, 3100);
+    }, 100);
+}
+
+pubnub.addListener({
+    message: (m) => {
+        if(m.channel === "CHAT_V4" && m.message.u !== user) receiveChat(m.message.u, m.message.t);
+        if(m.channel === "MATCH_V4") {
+            if(m.message.type === 'new') addMatchToUI(m.message.user, m.message.id, m.message.items, m.message.side);
+            if(m.message.type === 'cancel') document.getElementById(m.message.id)?.remove();
+            if(m.message.type === 'roll') {
+                document.getElementById(m.message.id)?.remove();
+                startFlipAnim(m.message.res, m.message.creator, m.message.joiner, m.message.items, m.message.cSide);
+            }
+        }
+    }
+});
+
+function fetchHistory() {
+    pubnub.history({ channel: "CHAT_V4", count: 15 }, (s, r) => r?.messages?.forEach(m => receiveChat(m.entry.u, m.entry.t)));
+    pubnub.history({ channel: "MATCH_V4", count: 50 }, (s, r) => {
         let active = new Map();
         r?.messages?.forEach(m => {
             if(m.entry.type === 'new') active.set(m.entry.id, m.entry);
@@ -153,108 +253,20 @@ function fetchHistory() {
     });
 }
 
-let selectedItems = []; let currentSide = 'H';
-function openInvForCreate() {
-    const grid = document.getElementById('inventory-grid');
-    grid.innerHTML = ""; selectedItems = [];
-    myInventory.forEach((itemIdx, arrayIdx) => {
-        const item = ITEMS[itemIdx];
-        const div = document.createElement('div');
-        div.className = "inv-card";
-        div.innerHTML = `<img src="${item.img}"><b>${item.n}</b><p>${item.v} Val</p>`;
-        div.onclick = () => {
-            div.classList.toggle('selected');
-            const pos = selectedItems.indexOf(arrayIdx);
-            if(pos > -1) selectedItems.splice(pos, 1); else selectedItems.push(arrayIdx);
-        };
-        grid.appendChild(div);
-    });
-    document.getElementById('inv-modal').style.display = "flex";
-}
-
-function handleConfirm() {
-    if(selectedItems.length === 0) return;
-    const mId = "M_" + Math.random().toString(36).substr(2, 9);
-    const itemObjects = selectedItems.map(idx => myInventory[idx]);
-    
-    pubnub.publish({ channel: "MATCH_V3", message: { type: 'new', user: user, id: mId, items: itemObjects, side: 'H' }});
-    
-    // Envanterden düş
-    selectedItems.sort((a,b) => b-a).forEach(idx => myInventory.splice(idx, 1));
-    updateUI(); closeInv();
-}
-
-function addMatchToUI(owner, id, itemIndices, side) {
-    if(document.getElementById(id)) return;
-    const totalVal = itemIndices.reduce((a, b) => a + ITEMS[b].v, 0);
-    const html = `<div class="match-card" id="${id}">
-        <div class="match-top"><b>${owner}</b> <span style="color:var(--gold)">${totalVal.toLocaleString()} Val</span></div>
-        <div style="display:flex; gap:5px; overflow-x:auto; padding-bottom:10px">
-            ${itemIndices.map(idx => `<img src="${ITEMS[idx].img}" style="width:40px; background:var(--panel); border-radius:5px; padding:2px">`).join('')}
-        </div>
-        <button class="btn" onclick="joinMatch('${id}', ${JSON.stringify(itemIndices)})">${owner === user ? 'İPTAL ET' : 'KATIL'}</button>
-    </div>`;
-    document.getElementById('match-list').insertAdjacentHTML('afterbegin', html);
-}
-
-function joinMatch(id, targetItems) {
-    if(document.getElementById(id).querySelector('button').innerText === 'İPTAL ET') {
-        pubnub.publish({ channel: "MATCH_V3", message: { type: 'cancel', id: id }});
-        myInventory.push(...targetItems);
-        updateUI();
-        return;
-    }
-    const myVal = myInventory.reduce((a, b) => a + ITEMS[b].v, 0);
-    const targetVal = targetItems.reduce((a, b) => a + ITEMS[b].v, 0);
-    if(myVal < targetVal) return alert("Yetersiz Value!");
-
-    // Otomatik envanterden en yakın itemleri seçip eşleştirme (Basitleştirilmiş)
-    pubnub.publish({ channel: "MATCH_V3", message: { type: 'roll', id: id, res: Math.random()>0.5?'H':'T', creator: user, amt: targetVal }});
-}
-
-function receiveChat(u, t) {
-    const box = document.getElementById('chat-msgs');
-    const div = document.createElement('div');
-    div.className = "msg";
-    div.innerHTML = `<b>${u}:</b> ${t}`;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-}
-
 function sendMsg() {
-    const inp = document.getElementById('chat-input');
-    if(!inp.value) return;
-    if(inp.value.startsWith('/tip') && user === OWNER) {
-        // Tip mantığı: /tip 1000 isim
-        const p = inp.value.split(' ');
-        pubnub.publish({ channel: "CHAT_V3", message: { u: "SYSTEM", t: `${p[2]} kullanıcısına ${p[1]} value gönderildi!` }});
-    } else {
-        pubnub.publish({ channel: "CHAT_V3", message: { u: user, t: inp.value } });
-        receiveChat(user, inp.value);
-    }
-    inp.value = "";
+    const inp = document.getElementById('chat-input'); if(!inp.value) return;
+    pubnub.publish({ channel: "CHAT_V4", message: { u: user, t: inp.value } });
+    receiveChat(user, inp.value); inp.value = "";
 }
-
-pubnub.addListener({
-    message: (m) => {
-        if(m.channel === "CHAT_V3" && m.message.u !== user) receiveChat(m.message.u, m.message.t);
-        if(m.channel === "MATCH_V3") {
-            if(m.message.type === 'new') addMatchToUI(m.message.user, m.message.id, m.message.items, m.message.side);
-            if(m.message.type === 'cancel' || m.message.type === 'roll') document.getElementById(m.message.id)?.remove();
-        }
-    }
-});
-
+function receiveChat(u, t) {
+    const box = document.getElementById('chat-msgs'); const div = document.createElement('div');
+    div.className = "msg"; div.innerHTML = `<b>${u}:</b> ${t}`; box.appendChild(div); box.scrollTop = box.scrollHeight;
+}
 function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
 function logout() { localStorage.clear(); location.reload(); }
-
-window.onload = () => {
-    if(!user) document.getElementById('login-modal').style.display = "flex";
-    else {
-        updateUI();
-        fetchHistory();
-        pubnub.setState({ state: { name: user }, channels: ["PRESENCE_V3"] });
-    }
+window.onload = () => { 
+    if(!user) document.getElementById('login-modal').style.display = "flex"; 
+    else { updateUI(); fetchHistory(); pubnub.setState({ state: { name: user }, channels: ["PRESENCE_V4"] }); }
 };
 </script>
 </body>
