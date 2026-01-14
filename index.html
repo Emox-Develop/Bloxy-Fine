@@ -57,7 +57,7 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
     <div class="box">
         <h2>Roblox Giriş</h2>
         <p style="font-size:12px; color:var(--gray); margin-bottom:10px">Profil açıklamana kodu yazıp kaydedin.</p>
-        <input type="text" id="rbx-name" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:white; margin-bottom:10px" placeholder="Kullanıcı Adı...">
+        <input type="text" id="rbx-name" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:white; margin-bottom:10px" placeholder="Roblox Kullanıcı Adı...">
         <button class="btn" id="gen-btn" onclick="generateCode()">KOD ÜRET</button>
         <div id="verify-section" style="display:none; margin-top:15px">
             <div style="background:black; padding:10px; border-radius:8px; margin-bottom:10px">
@@ -106,6 +106,7 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 let user = localStorage.getItem('rbx_user') || "";
 let invCount = localStorage.getItem('rbx_inv') ? parseInt(localStorage.getItem('rbx_inv')) : 50;
 let currentCode = "";
+let rbxUserId = null;
 
 const pubnub = new PubNub({
     publishKey: "pub-c-134bcaab-4830-4bbb-afb4-b7595ffffebe",
@@ -115,54 +116,62 @@ const pubnub = new PubNub({
 
 pubnub.subscribe({ channels: ["CHAT_V201_COMPACT", "MATCH_V201_COMPACT"] });
 
-// YENİLENMİŞ DOĞRULAMA MANTIĞI
-function generateCode() {
-    const name = document.getElementById('rbx-name').value;
+// ROBLOX GERÇEK KONTROL SİSTEMİ
+async function generateCode() {
+    const name = document.getElementById('rbx-name').value.trim();
     if(!name) return alert("Lütfen kullanıcı adını yaz!");
-    currentCode = "FINE-" + Math.floor(1000 + Math.random()*9000);
-    document.getElementById('v-code').innerText = currentCode;
-    document.getElementById('verify-section').style.display = "block";
-    document.getElementById('gen-btn').style.display = "none";
+    
+    document.getElementById('gen-btn').innerText = "KULLANICI ARANIYOR...";
+    document.getElementById('gen-btn').disabled = true;
+
+    try {
+        // Kullanıcı var mı ve ID'si ne?
+        const res = await fetch(`https://roproxy.com/v1/users/search?keyword=${name}&limit=1`);
+        const data = await res.json();
+        
+        if(!data.data || data.data.length === 0 || data.data[0].name.toLowerCase() !== name.toLowerCase()) {
+            alert("HATA: Böyle bir Roblox kullanıcısı bulunamadı!");
+            document.getElementById('gen-btn').innerText = "KOD ÜRET";
+            document.getElementById('gen-btn').disabled = false;
+            return;
+        }
+
+        rbxUserId = data.data[0].id;
+        currentCode = "FINE-" + Math.floor(1000 + Math.random()*9000);
+        document.getElementById('v-code').innerText = currentCode;
+        document.getElementById('verify-section').style.display = "block";
+        document.getElementById('gen-btn').style.display = "none";
+    } catch(e) {
+        alert("Bağlantı hatası! Lütfen tekrar deneyin.");
+        document.getElementById('gen-btn').innerText = "KOD ÜRET";
+        document.getElementById('gen-btn').disabled = false;
+    }
 }
 
 async function verifyProfile() {
-    const name = document.getElementById('rbx-name').value;
     const btn = document.getElementById('verify-btn');
-    btn.innerText = "KONTROL EDİLİYOR...";
+    btn.innerText = "BIO KONTROL EDİLİYOR...";
     btn.disabled = true;
 
-    // Roblox kullanıcı id'sini bul
     try {
-        const userRes = await fetch(`https://users.roblox.com/v1/users/search?keyword=${name}&limit=1`);
-        const userData = await userRes.json();
+        const res = await fetch(`https://roproxy.com/v1/users/${rbxUserId}`);
+        const data = await res.json();
         
-        if(userData.data && userData.data.length > 0) {
-            const userId = userData.data[0].id;
-            const profileRes = await fetch(`https://users.roblox.com/v1/users/${userId}`);
-            const profileData = await profileRes.json();
-            
-            // Açıklamayı kontrol et (Büyük/Küçük harf duyarsız)
-            if (profileData.description && profileData.description.toUpperCase().includes(currentCode)) {
-                user = name;
-                localStorage.setItem('rbx_user', user);
-                location.reload();
-                return;
-            }
+        const bio = data.description || "";
+        
+        if (bio.toUpperCase().includes(currentCode)) {
+            user = data.name;
+            localStorage.setItem('rbx_user', user);
+            location.reload();
+        } else {
+            alert("HATA: Kod profilinde bulunamadı!\n\nBeklenen: " + currentCode + "\n\nLütfen Bio kısmını (Hakkında) güncelleyip kaydedin.");
+            btn.innerText = "TEKRAR DOĞRULA";
+            btn.disabled = false;
         }
-        
-        // Eğer API engellenirse veya kod bulunamazsa kullanıcıya bilgi ver
-        // Not: Tarayıcı üzerinden direkt Roblox API çekmek CORS hatası verebilir, 
-        // gerçek projede bir backend proxy kullanmalısın. Şimdilik giriş yapmana izin veriyorum.
-        console.log("Roblox API doğrudan erişimi kısıtlı olabilir, giriş yapılıyor...");
-        user = name;
-        localStorage.setItem('rbx_user', user);
-        location.reload();
-
     } catch (e) {
-        // Hata durumunda (CORS vb.) kullanıcıyı bekletmemek için giriş yaptırıyoruz
-        user = name;
-        localStorage.setItem('rbx_user', user);
-        location.reload();
+        alert("Profil kontrol edilemedi, lütfen biraz bekleyip tekrar deneyin.");
+        btn.innerText = "TEKRAR DOĞRULA";
+        btn.disabled = false;
     }
 }
 
