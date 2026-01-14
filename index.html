@@ -113,14 +113,13 @@ const pubnub = new PubNub({
 
 pubnub.subscribe({ channels: ["CHAT_V201_COMPACT", "MATCH_V201_COMPACT"] });
 
+// HAYALET MAÇLARI ÖNLEYEN YENİ SİSTEM
 function fetchHistory() {
-    document.getElementById('match-list').innerHTML = ""; // Tekrarlanmayı önlemek için temizle
-    pubnub.history({ channel: "MATCH_V201_COMPACT", count: 20 }, (s, r) => {
-        if(r) r.messages.forEach(m => { if(m.entry.type === 'new') addMatchToUI(m.entry.user, m.entry.id, m.entry.amt, m.entry.side); });
-    });
-    pubnub.history({ channel: "CHAT_V201_COMPACT", count: 20 }, (s, r) => {
+    pubnub.history({ channel: "CHAT_V201_COMPACT", count: 15 }, (s, r) => {
         if(r) r.messages.forEach(m => receiveChat(m.entry.u, m.entry.t));
     });
+    // Maç geçmişini çekmiyoruz çünkü eski maçlar kafa karıştırıyor. 
+    // Sadece o an aktif olanlar gelecek.
 }
 
 pubnub.addListener({
