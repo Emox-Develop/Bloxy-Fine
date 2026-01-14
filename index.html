@@ -2,10 +2,10 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Bloxy Fine | Coin Flip Edition</title>
+<title>Bloxy Fine | Exclusive Edition</title>
 <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
 <style>
-:root{--bg:#0d0f13;--panel:#15181f;--card:#1c2028;--border:#262a33;--green:#2ecc71;--red:#e74c3c;--gray:#8a9199;--gold:#f1c40f;--blue:#3498db}
+:root{--bg:#0d0f13;--panel:#15181f;--card:#1c2028;--border:#262a33;--green:#2ecc71;--red:#e74c3c;--gray:#8a9199;--gold:#f1c40f;--blue:#3498db;--purple:#9b59b6}
 *{box-sizing:border-box; margin:0; padding:0;}
 body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:flex;height:100vh;overflow:hidden}
 .sidebar{width:70px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding-top:20px}
@@ -28,16 +28,21 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 .side-icon{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px}
 .side-h{background:var(--blue);box-shadow:0 0 10px var(--blue)}
 .side-t{background:var(--red);box-shadow:0 0 10px var(--red)}
-.item-display-area{display:flex; flex-wrap:wrap; gap:6px; background:rgba(0,0,0,0.15); padding:8px; border-radius:8px}
 .item-mini-img{width:40px !important; height:40px !important; background:var(--panel); padding:4px; border-radius:6px; border:1px solid var(--border); object-fit: contain;}
 #chat-msgs{flex:1;padding:15px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
-.msg{background:var(--card);padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px}
-.msg b{color:var(--green);font-size:10px;display:block}
+.msg{background:var(--card);padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px;position:relative}
+
+/* ROL SİSTEMİ RENKLERİ */
+.role-tag{font-size:9px; font-weight:bold; padding:2px 5px; border-radius:4px; margin-right:5px; text-transform:uppercase}
+.role-owner{background:var(--red); color:white; box-shadow: 0 0 5px var(--red)}
+.role-mod{background:var(--blue); color:white}
+.role-whale{background:var(--gold); color:black}
+.role-highroller{background:var(--purple); color:white}
+.role-user{background:var(--gray); color:white}
+
+.msg b{font-size:11px; display:inline-block}
 .btn{background:var(--green);color:white;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;width:100%;font-size:13px}
 .logout-btn{color:var(--red); cursor:pointer; font-size:11px; margin-left:10px; font-weight:bold; text-decoration:underline}
-.side-btn{flex:1; padding:10px; border:1px solid var(--border); background:var(--card); color:white; cursor:pointer;}
-.active-h{background:var(--blue); border-color:white}
-.active-t{background:var(--red); border-color:white}
 </style>
 </head>
 <body>
@@ -58,7 +63,6 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 <div id="login-modal" class="modal-overlay" style="display:none">
     <div class="box">
         <h2>Bloxy Fine Giriş</h2>
-        <p style="font-size:13px; color:var(--gray); margin-bottom:15px">Roblox kullanıcı adını yazarak başlayabilirsin.</p>
         <input type="text" id="rbx-name" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:white; margin-bottom:15px" placeholder="Kullanıcı Adın...">
         <button class="btn" onclick="simpleLogin()">GİRİŞ YAP</button>
     </div>
@@ -68,8 +72,8 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
     <div class="box">
         <h3 id="inv-title">Eşya Seç</h3>
         <div id="side-select" style="display:flex; gap:10px; margin:15px 0">
-            <button class="side-btn active-h" id="btn-h" onclick="selectSide('H')">MAVİ (H)</button>
-            <button class="side-btn" id="btn-t" onclick="selectSide('T')">KIRMIZI (T)</button>
+            <button class="side-btn" id="btn-h" style="flex:1; padding:10px;" onclick="selectSide('H')">MAVİ (H)</button>
+            <button class="side-btn" id="btn-t" style="flex:1; padding:10px;" onclick="selectSide('T')">KIRMIZI (T)</button>
         </div>
         <div class="grid" id="inventory-grid"></div>
         <button class="btn" onclick="handleConfirm()">ONAYLA</button>
@@ -82,7 +86,7 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
     <div class="header">
         <div style="font-weight:900; font-size:18px; letter-spacing: 1px;">BLOXY <span style="color:var(--green)">FINE</span></div>
         <div class="user-info">
-            <span id="u-name">...</span> | 💰 <span id="u-inv">0</span>
+            <span id="role-display"></span> <span id="u-name">...</span> | 💰 <span id="u-inv">0</span>
             <span class="logout-btn" onclick="logout()">[ÇIKIŞ]</span>
         </div>
     </div>
@@ -94,12 +98,23 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 
 <div class="chat-area">
     <div id="chat-msgs"></div>
-    <div style="padding:15px"><input type="text" id="chat-input" placeholder="Mesaj..." onkeypress="if(event.key==='Enter') sendMsg()"></div>
+    <div style="padding:15px"><input type="text" id="chat-input" placeholder="Mesaj veya /tip miktar isim..." onkeypress="if(event.key==='Enter') sendMsg()"></div>
 </div>
 
 <script>
+// --- AYARLAR ---
+const OWNER_NAME = "isimsizler2038"; // Senin ismin
 let user = localStorage.getItem('rbx_user') || "";
 let invCount = localStorage.getItem('rbx_inv') ? parseInt(localStorage.getItem('rbx_inv')) : 50;
+
+// Rol Belirleme Fonksiyonu
+function getRole(username) {
+    if(username === OWNER_NAME) return {name: "Owner", class: "role-owner"};
+    if(username === "Moderator") return {name: "Mod", class: "role-mod"};
+    if(invCount > 500) return {name: "Whale", class: "role-whale"};
+    if(invCount > 150) return {name: "HighRoller", class: "role-highroller"};
+    return {name: "User", class: "role-user"};
+}
 
 const pubnub = new PubNub({
     publishKey: "pub-c-134bcaab-4830-4bbb-afb4-b7595ffffebe",
@@ -107,43 +122,63 @@ const pubnub = new PubNub({
     uuid: user || "u_" + Math.random().toString(16).slice(2, 8)
 });
 
-pubnub.subscribe({ channels: ["CHAT_V201_COMPACT", "MATCH_V201_COMPACT"] });
+pubnub.subscribe({ channels: ["CHAT_V202_ROLES", "MATCH_V202_ROLES", "TIPS_V202"] });
 
-// SADECE İSİM İLE GİRİŞ
 function simpleLogin() {
     const name = document.getElementById('rbx-name').value.trim();
-    if(!name) return alert("İsim yazmalısın!");
+    if(!name) return alert("İsim yaz!");
     user = name;
     localStorage.setItem('rbx_user', user);
     location.reload();
 }
 
-function logout() {
-    localStorage.removeItem('rbx_user');
-    location.reload();
-}
+function logout() { localStorage.removeItem('rbx_user'); location.reload(); }
 
-function fetchHistory() {
-    let tempMatches = new Map();
-    pubnub.history({ channel: "MATCH_V201_COMPACT", count: 50 }, (s, r) => {
-        if(r) {
-            r.messages.forEach(m => {
-                const data = m.entry;
-                if(data.type === 'new') tempMatches.set(data.id, data);
-                if(data.type === 'cancel' || data.type === 'roll') tempMatches.delete(data.id);
-            });
-            tempMatches.forEach(m => addMatchToUI(m.user, m.id, m.amt, m.side));
+// CHAT VE TIP SİSTEMİ
+function sendMsg() {
+    const input = document.getElementById('chat-input');
+    const val = input.value.trim();
+    if(!val) return;
+
+    // TIP KOMUTU KONTROLÜ (/tip 10 isim)
+    if(val.startsWith('/tip')) {
+        if(user !== OWNER_NAME) {
+            receiveChat("SYSTEM", "Bu komutu sadece Owner kullanabilir!");
+            input.value = "";
+            return;
         }
-    });
-    pubnub.history({ channel: "CHAT_V201_COMPACT", count: 15 }, (s, r) => {
-        if(r) r.messages.forEach(m => receiveChat(m.entry.u, m.entry.t));
-    });
+        const parts = val.split(' ');
+        if(parts.length >= 3) {
+            const amount = parseInt(parts[1]);
+            const target = parts[2];
+            if(!isNaN(amount)) {
+                pubnub.publish({ 
+                    channel: "TIPS_V202", 
+                    message: { from: user, to: target, amt: amount } 
+                });
+                receiveChat("SYSTEM", `${target} kullanıcısına ${amount} eşya gönderildi!`);
+            }
+        }
+        input.value = "";
+        return;
+    }
+
+    pubnub.publish({ channel: "CHAT_V202_ROLES", message: { u: user, t: val } });
+    receiveChat(user, val);
+    input.value = "";
 }
 
 pubnub.addListener({
     message: (m) => {
-        if(m.channel === "CHAT_V201_COMPACT" && m.message.u !== user) receiveChat(m.message.u, m.message.t);
-        if(m.channel === "MATCH_V201_COMPACT") {
+        if(m.channel === "CHAT_V202_ROLES" && m.message.u !== user) receiveChat(m.message.u, m.message.t);
+        if(m.channel === "TIPS_V202") {
+            if(m.message.to === user) {
+                invCount += m.message.amt;
+                updateUI();
+                receiveChat("SYSTEM", `Owner size ${m.message.amt} eşya gönderdi!`);
+            }
+        }
+        if(m.channel === "MATCH_V202_ROLES") {
             if(m.message.type === 'new') addMatchToUI(m.message.user, m.message.id, m.message.amt, m.message.side);
             if(m.message.type === 'cancel' || m.message.type === 'roll') document.getElementById(m.message.id)?.remove();
             if(m.message.type === 'roll') startCoinFlip(m.message.id, m.message.res, m.message.creator, m.message.joiner, m.message.amt, m.message.cSide);
@@ -151,24 +186,35 @@ pubnub.addListener({
     }
 });
 
+function receiveChat(u, t) {
+    const box = document.getElementById('chat-msgs');
+    const div = document.createElement('div');
+    div.className = "msg";
+    const role = getRole(u);
+    div.innerHTML = `<span class="role-tag ${role.class}">${role.name}</span><b>${u}:</b> ${t}`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
+
+// OYUN FONKSİYONLARI (DOKUNULMADI)
 let selectedSide = 'H'; let selectedCount = 0; let joinId = null; let reqAmt = 0;
 function selectSide(s) {
     selectedSide = s;
-    document.getElementById('btn-h').className = s === 'H' ? 'side-btn active-h' : 'side-btn';
-    document.getElementById('btn-t').className = s === 'T' ? 'side-btn active-t' : 'side-btn';
+    document.getElementById('btn-h').style.background = s === 'H' ? 'var(--blue)' : 'var(--card)';
+    document.getElementById('btn-t').style.background = s === 'T' ? 'var(--red)' : 'var(--card)';
 }
 
 function handleConfirm() {
     if(selectedCount === 0) return;
     if(joinId) {
-        if(selectedCount !== reqAmt) return alert(reqAmt + " adet eşya seçmelisin!");
+        if(selectedCount !== reqAmt) return alert(reqAmt + " adet seç!");
         const result = Math.random() > 0.5 ? 'H' : 'T';
         const mD = document.getElementById(joinId).dataset;
-        pubnub.publish({ channel: "MATCH_V201_COMPACT", message: { type: 'roll', id: joinId, res: result, creator: mD.owner, joiner: user, amt: reqAmt, cSide: mD.side }});
+        pubnub.publish({ channel: "MATCH_V202_ROLES", message: { type: 'roll', id: joinId, res: result, creator: mD.owner, joiner: user, amt: reqAmt, cSide: mD.side }});
         invCount -= selectedCount;
     } else {
         const mId = "M_" + Math.random().toString(36).substr(2, 8);
-        pubnub.publish({ channel: "MATCH_V201_COMPACT", message: { type: 'new', user: user, id: mId, amt: selectedCount, side: selectedSide }});
+        pubnub.publish({ channel: "MATCH_V202_ROLES", message: { type: 'new', user: user, id: mId, amt: selectedCount, side: selectedSide }});
         addMatchToUI(user, mId, selectedCount, selectedSide);
         invCount -= selectedCount;
     }
@@ -199,7 +245,14 @@ function addMatchToUI(owner, id, amt, side) {
     list.prepend(div);
 }
 
-function updateUI() { document.getElementById('u-inv').innerText = invCount; localStorage.setItem('rbx_inv', invCount); document.getElementById('u-name').innerText = user; }
+function updateUI() { 
+    document.getElementById('u-inv').innerText = invCount; 
+    localStorage.setItem('rbx_inv', invCount); 
+    document.getElementById('u-name').innerText = user; 
+    const role = getRole(user);
+    document.getElementById('role-display').innerHTML = `<span class="role-tag ${role.class}">${role.name}</span>`;
+}
+
 function openInvForCreate() { joinId = null; document.getElementById('side-select').style.display="flex"; openInv(); }
 function openInvForJoin(id, amt) { joinId = id; reqAmt = amt; document.getElementById('side-select').style.display="none"; openInv(); }
 function openInv() {
@@ -212,11 +265,9 @@ function openInv() {
     }
     document.getElementById('inv-modal').style.display = "flex";
 }
-function cancelMatch(id, amt) { pubnub.publish({ channel: "MATCH_V201_COMPACT", message: { type: 'cancel', id: id } }); document.getElementById(id)?.remove(); invCount += amt; updateUI(); }
-function sendMsg() { const i = document.getElementById('chat-input'); if(!i.value.trim()) return; pubnub.publish({ channel: "CHAT_V201_COMPACT", message: { u: user, t: i.value } }); receiveChat(user, i.value); i.value = ""; }
-function receiveChat(u, t) { const box = document.getElementById('chat-msgs'); const div = document.createElement('div'); div.className = "msg"; div.innerHTML = `<b>${u}</b> ${t}`; box.appendChild(div); box.scrollTop = box.scrollHeight; }
+function cancelMatch(id, amt) { pubnub.publish({ channel: "MATCH_V202_ROLES", message: { type: 'cancel', id: id } }); document.getElementById(id)?.remove(); invCount += amt; updateUI(); }
 function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
-window.onload = () => { if(!user) document.getElementById('login-modal').style.display = "flex"; else { updateUI(); fetchHistory(); } };
+window.onload = () => { if(!user) document.getElementById('login-modal').style.display = "flex"; else { updateUI(); } };
 </script>
 </body>
 </html>
