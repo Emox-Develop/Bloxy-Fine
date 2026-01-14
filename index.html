@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Bloxluck | Coin Flip Edition</title>
+<title>Bloxy Fine | Coin Flip Edition</title>
 <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
 <style>
 :root{--bg:#0d0f13;--panel:#15181f;--card:#1c2028;--border:#262a33;--green:#2ecc71;--red:#e74c3c;--gray:#8a9199;--gold:#f1c40f;--blue:#3498db}
@@ -87,7 +87,7 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
 <div class="sidebar"></div>
 <div class="main">
     <div class="header">
-        <div style="font-weight:900; font-size:18px">BLOX<span style="color:var(--green)">LUCK</span></div>
+        <div style="font-weight:900; font-size:18px; letter-spacing: 1px;">BLOXY <span style="color:var(--green)">FINE</span></div>
         <div class="user-info"><span id="u-name">...</span> | 💰 <span id="u-inv">0</span></div>
     </div>
     <div style="padding:20px; overflow-y: auto; flex:1">
@@ -113,13 +113,10 @@ const pubnub = new PubNub({
 
 pubnub.subscribe({ channels: ["CHAT_V201_COMPACT", "MATCH_V201_COMPACT"] });
 
-// HAYALET MAÇLARI ÖNLEYEN YENİ SİSTEM
 function fetchHistory() {
     pubnub.history({ channel: "CHAT_V201_COMPACT", count: 15 }, (s, r) => {
         if(r) r.messages.forEach(m => receiveChat(m.entry.u, m.entry.t));
     });
-    // Maç geçmişini çekmiyoruz çünkü eski maçlar kafa karıştırıyor. 
-    // Sadece o an aktif olanlar gelecek.
 }
 
 pubnub.addListener({
