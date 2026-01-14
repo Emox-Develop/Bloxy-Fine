@@ -113,7 +113,19 @@ const pubnub = new PubNub({
 
 pubnub.subscribe({ channels: ["CHAT_V201_COMPACT", "MATCH_V201_COMPACT"] });
 
+// AKILLI GEÇMİŞ ÇEKME: Sadece bekleyen maçları bulur
 function fetchHistory() {
+    let tempMatches = new Map();
+    pubnub.history({ channel: "MATCH_V201_COMPACT", count: 50 }, (s, r) => {
+        if(r) {
+            r.messages.forEach(m => {
+                const data = m.entry;
+                if(data.type === 'new') tempMatches.set(data.id, data);
+                if(data.type === 'cancel' || data.type === 'roll') tempMatches.delete(data.id);
+            });
+            tempMatches.forEach(m => addMatchToUI(m.user, m.id, m.amt, m.side));
+        }
+    });
     pubnub.history({ channel: "CHAT_V201_COMPACT", count: 15 }, (s, r) => {
         if(r) r.messages.forEach(m => receiveChat(m.entry.u, m.entry.t));
     });
