@@ -66,7 +66,7 @@ body{background:var(--bg);color:#fff;font-family:'Segoe UI',sans-serif;display:f
             <button class="btn" id="btn-t" style="background:var(--card)" onclick="selectSide('T')">KIRMIZI (T)</button>
         </div>
         <div class="grid" id="inventory-grid"></div>
-        <button class="btn" onclick="handleConfirm()">MAÇI BAŞLAT</button>
+        <button class="btn" onclick="handleConfirm()">ONAYLA</button>
         <button class="btn" onclick="closeInv()" style="margin-top:5px; background:var(--red)">KAPAT</button>
     </div>
 </div>
@@ -107,13 +107,7 @@ const ITEMS_DB = [
 ];
 
 let user = localStorage.getItem('rbx_user') || "";
-// Envanteri item indexleri olarak tutuyoruz
 let myInventory = JSON.parse(localStorage.getItem('rbx_inv_list')) || [0,1,2,3,4,5,6,7,8,9]; 
-
-function getRole(username) {
-    if(username === OWNER_NAME) return {name: "Owner", class: "role-owner"};
-    return {name: "User", class: "role-user"};
-}
 
 const pubnub = new PubNub({
     publishKey: "pub-c-134bcaab-4830-4bbb-afb4-b7595ffffebe",
@@ -121,15 +115,29 @@ const pubnub = new PubNub({
     uuid: user || "u_" + Math.random().toString(16).slice(2, 8)
 });
 
-pubnub.subscribe({ channels: ["CHAT_V202", "MATCH_V202", "TIPS_V202"] });
+pubnub.subscribe({ channels: ["CHAT_MAIN", "MATCH_MAIN"] });
 
 function updateUI() {
     document.getElementById('u-name').innerText = user;
     let totalValue = myInventory.reduce((a, b) => a + ITEMS_DB[b].v, 0);
     document.getElementById('u-val').innerText = totalValue.toLocaleString();
-    const role = getRole(user);
-    document.getElementById('role-display').innerHTML = `<span class="role-tag ${role.class}">${role.name}</span>`;
+    document.getElementById('role-display').innerHTML = `<span class="role-tag ${user===OWNER_NAME?'role-owner':'role-user'}">${user===OWNER_NAME?'Owner':'User'}</span>`;
     localStorage.setItem('rbx_inv_list', JSON.stringify(myInventory));
+}
+
+// GEÇMİŞİ ÇEKME (YENİLEYİNCE KAYBOLMAMASI İÇİN)
+function loadHistory() {
+    pubnub.history({ channel: "CHAT_MAIN", count: 30 }, (s, r) => {
+        r?.messages?.forEach(m => receiveChat(m.entry.u, m.entry.t));
+    });
+    pubnub.history({ channel: "MATCH_MAIN", count: 100 }, (s, r) => {
+        let activeMatches = new Map();
+        r?.messages?.forEach(m => {
+            if(m.entry.type === 'new') activeMatches.set(m.entry.id, m.entry);
+            if(m.entry.type === 'cancel' || m.entry.type === 'roll') activeMatches.delete(m.entry.id);
+        });
+        activeMatches.forEach(m => addMatchToUI(m.user, m.id, m.items, m.side));
+    });
 }
 
 let selectedSide = 'H'; let selectedIndices = []; let joinId = null;
@@ -139,17 +147,8 @@ function selectSide(s) {
     document.getElementById('btn-t').style.background = s === 'T' ? 'var(--red)' : 'var(--card)';
 }
 
-function openInvForCreate() { 
-    joinId = null; 
-    document.getElementById('side-select').style.display="flex"; 
-    renderInventory(); 
-}
-
-function openInvForJoin(id, items) { 
-    joinId = id; 
-    document.getElementById('side-select').style.display="none"; 
-    renderInventory(); 
-}
+function openInvForCreate() { joinId = null; document.getElementById('side-select').style.display="flex"; renderInventory(); }
+function openInvForJoin(id) { joinId = id; document.getElementById('side-select').style.display="none"; renderInventory(); }
 
 function renderInventory() {
     const grid = document.getElementById('inventory-grid'); grid.innerHTML = ""; selectedIndices = [];
@@ -169,20 +168,14 @@ function renderInventory() {
 function handleConfirm() {
     if(selectedIndices.length === 0) return;
     const selectedItemObjects = selectedIndices.map(i => myInventory[i]);
-    
     if(joinId) {
-        const result = Math.random() > 0.5 ? 'H' : 'T';
         const mD = document.getElementById(joinId).dataset;
-        pubnub.publish({ channel: "MATCH_V202", message: { 
-            type: 'roll', id: joinId, res: result, creator: mD.owner, joiner: user, items: JSON.parse(mD.items), cSide: mD.side 
-        }});
+        const res = Math.random() > 0.5 ? 'H' : 'T';
+        pubnub.publish({ channel: "MATCH_MAIN", message: { type: 'roll', id: joinId, res: res, creator: mD.owner, joiner: user, items: JSON.parse(mD.items), cSide: mD.side }});
     } else {
         const mId = "M_" + Math.random().toString(36).substr(2, 8);
-        pubnub.publish({ channel: "MATCH_V202", message: { 
-            type: 'new', user: user, id: mId, items: selectedItemObjects, side: selectedSide 
-        }});
+        pubnub.publish({ channel: "MATCH_MAIN", message: { type: 'new', user: user, id: mId, items: selectedItemObjects, side: selectedSide }});
     }
-    
     selectedIndices.sort((a,b) => b-a).forEach(i => myInventory.splice(i, 1));
     updateUI(); closeInv();
 }
@@ -197,16 +190,14 @@ function addMatchToUI(owner, id, items, side) {
             <div><span class="side-icon ${side==='H'?'side-h':'side-t'}">${side}</span> <b>${owner}</b></div>
             <div style="color:var(--gold)">Value: ${totalV.toLocaleString()}</div>
         </div>
-        <div class="item-display-area">
-            ${items.map(idx => `<img src="${ITEMS_DB[idx].img}" class="item-mini-img" title="${ITEMS_DB[idx].n}">`).join('')}
-        </div>
+        <div class="item-display-area">${items.map(idx => `<img src="${ITEMS_DB[idx].img}" class="item-mini-img">`).join('')}</div>
         <div style="display:flex; justify-content:flex-end">
             ${owner === user ? `<button class="btn" style="background:var(--red); width:80px" onclick="cancelMatch('${id}')">İPTAL</button>` : `<button class="btn" style="width:80px" onclick="openInvForJoin('${id}')">KATIL</button>`}
         </div>`;
     document.getElementById('match-list').prepend(div);
 }
 
-function startCoinFlip(id, res, creator, joiner, items, cSide) {
+function startCoinFlip(res, creator, joiner, items, cSide) {
     const modal = document.getElementById('flip-modal'); const coin = document.getElementById('coin-element'); const winnerTxt = document.getElementById('winner-text');
     modal.style.display = "flex"; winnerTxt.innerText = ""; coin.style.transition = "none"; coin.style.transform = "rotateY(0deg)"; 
     setTimeout(() => {
@@ -217,42 +208,38 @@ function startCoinFlip(id, res, creator, joiner, items, cSide) {
             winnerTxt.innerText = "KAZANAN: " + winner;
             winnerTxt.style.color = (winner === user) ? "var(--green)" : "var(--red)";
             if(winner === user) { myInventory.push(...items, ...items); updateUI(); }
-            setTimeout(() => { modal.style.display = "none"; }, 2000);
+            setTimeout(() => { modal.style.display = "none"; }, 2500);
         }, 3100);
     }, 50);
 }
 
 function cancelMatch(id) {
     const mD = document.getElementById(id).dataset;
-    pubnub.publish({ channel: "MATCH_V202", message: { type: 'cancel', id: id } });
-    myInventory.push(...JSON.parse(mD.items)); 
-    document.getElementById(id).remove(); updateUI();
+    pubnub.publish({ channel: "MATCH_MAIN", message: { type: 'cancel', id: id } });
+    myInventory.push(...JSON.parse(mD.items)); document.getElementById(id).remove(); updateUI();
 }
 
 function sendMsg() {
-    const input = document.getElementById('chat-input');
-    if(!input.value.trim()) return;
-    pubnub.publish({ channel: "CHAT_V202", message: { u: user, t: input.value } });
+    const input = document.getElementById('chat-input'); if(!input.value.trim()) return;
+    pubnub.publish({ channel: "CHAT_MAIN", message: { u: user, t: input.value } });
     receiveChat(user, input.value); input.value = "";
 }
 
 function receiveChat(u, t) {
-    const box = document.getElementById('chat-msgs');
-    const div = document.createElement('div'); div.className = "msg";
-    const role = getRole(u);
-    div.innerHTML = `<span class="role-tag ${role.class}">${role.name}</span><b>${u}:</b> ${t}`;
+    const box = document.getElementById('chat-msgs'); const div = document.createElement('div'); div.className = "msg";
+    div.innerHTML = `<span class="role-tag ${u===OWNER_NAME?'role-owner':'role-user'}">${u===OWNER_NAME?'Owner':'User'}</span><b>${u}:</b> ${t}`;
     box.appendChild(div); box.scrollTop = box.scrollHeight;
 }
 
 pubnub.addListener({
     message: (m) => {
-        if(m.channel === "CHAT_V202" && m.message.u !== user) receiveChat(m.message.u, m.message.t);
-        if(m.channel === "MATCH_V202") {
+        if(m.channel === "CHAT_MAIN" && m.message.u !== user) receiveChat(m.message.u, m.message.t);
+        if(m.channel === "MATCH_MAIN") {
             if(m.message.type === 'new') addMatchToUI(m.message.user, m.message.id, m.message.items, m.message.side);
             if(m.message.type === 'cancel') document.getElementById(m.message.id)?.remove();
             if(m.message.type === 'roll') {
                 document.getElementById(m.message.id)?.remove();
-                startCoinFlip(m.message.id, m.message.res, m.message.creator, m.message.joiner, m.message.items, m.message.cSide);
+                startCoinFlip(m.message.res, m.message.creator, m.message.joiner, m.message.items, m.message.cSide);
             }
         }
     }
@@ -264,7 +251,7 @@ function simpleLogin() {
 }
 function logout() { localStorage.removeItem('rbx_user'); location.reload(); }
 function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
-window.onload = () => { if(!user) document.getElementById('login-modal').style.display = "flex"; else updateUI(); };
+window.onload = () => { if(!user) document.getElementById('login-modal').style.display = "flex"; else { updateUI(); loadHistory(); } };
 </script>
 </body>
 </html>
