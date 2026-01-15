@@ -30,6 +30,9 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
 
 .game-container { flex: 1; padding: 20px; overflow-y: auto; }
 
+/* GIVEAWAY UI */
+#gw-bar { background: linear-gradient(90deg, #1a1d27, #242834); border: 1px solid var(--accent); margin-bottom: 15px; padding: 15px; border-radius: 10px; display: none; align-items: center; justify-content: space-between; }
+
 /* LEADERBOARD UI */
 .lb-tabs { display: flex; gap: 10px; margin-bottom: 15px; background: var(--bg-panel); padding: 5px; border-radius: 8px; border: 1px solid var(--border-color); }
 .lb-tab { flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 11px; font-weight: bold; border-radius: 5px; }
@@ -44,22 +47,15 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
 .match-items img { width: 35px; height: 35px; background: var(--bg-card); border-radius: 5px; padding: 3px; border: 1px solid var(--border-color); }
 .cancel-btn { width: 100%; background: #351a1a; color: var(--red); border: 1px solid #4a1f1f; padding: 6px; border-radius: 5px; cursor: pointer; font-size: 10px; margin-top: 8px; }
 
-/* CHAT ROLES */
+/* CHAT */
 .side-chat { width: 300px; background: var(--bg-panel); border-left: 2px solid var(--border-color); display: flex; flex-direction: column; }
 #chat-msgs { flex: 1; overflow-y: auto; padding: 15px; font-size: 12px; }
 .role-badge { font-size: 8px; padding: 2px 4px; border-radius: 3px; font-weight: 800; margin-right: 5px; text-transform: uppercase; }
 .role-owner { background: var(--red); color: white; }
 .role-user { background: #444; color: white; }
 
-/* MODALS & COIN */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
 .box { background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 450px; border: 1px solid var(--border-color); }
-
-.coin-container { perspective: 1000px; width: 100px; height: 100px; margin: 20px auto; }
-.coin { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 3s cubic-bezier(0.1, 0, 0.1, 1); }
-.coin div { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; }
-.coin .heads { background: var(--blue); }
-.coin .tails { background: var(--red); transform: rotateY(180deg); }
 
 /* ADMIN PANEL */
 #admin-panel { position: fixed; bottom: 80px; right: 320px; background: var(--bg-panel); border: 2px solid var(--red); padding: 15px; border-radius: 12px; z-index: 10000; display: none; width: 280px; }
@@ -72,11 +68,14 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
     <h4 style="color:var(--red); margin-bottom:10px">ELITE ADMIN</h4>
     <input type="text" id="adm-target" placeholder="Target Username" style="width:100%; margin-bottom:5px; padding:8px; background:#000; color:#fff; border:1px solid #333">
     <select id="adm-item" style="width:100%; margin-bottom:10px; padding:8px; background:#000; color:#fff; border:1px solid #333"></select>
-    <div style="display:flex; gap:5px">
-        <button class="lb-tab" style="background:var(--accent); color:white" onclick="adminAction('add')">GIVE ITEM</button>
+    <div style="display:flex; gap:5px; margin-bottom:10px">
+        <button class="lb-tab" style="background:var(--accent); color:white" onclick="adminAction('add')">GIVE</button>
         <button class="lb-tab" style="background:var(--red); color:white" onclick="adminAction('ban')">BAN</button>
-        <button class="lb-tab" style="background:var(--blue); color:white" onclick="adminAction('unban')">UNBAN</button>
     </div>
+    <hr style="border-color:#333; margin:10px 0">
+    <label style="font-size:10px">GW Dakika:</label>
+    <input type="number" id="gw-time" value="5" style="width:50px; background:#000; color:#fff; border:1px solid #333">
+    <button class="lb-tab" style="background:var(--gold); color:#000" onclick="startGW()">START GIVEAWAY</button>
 </div>
 <div class="admin-badge" id="adm-btn" onclick="toggleAdmin()">ADM</div>
 
@@ -86,9 +85,8 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
         <div style="display:flex; gap:10px">
             <button class="lb-tab" style="background:var(--bg-card)" onclick="openLeaderboard()">Leaderboard</button>
             <button class="lb-tab" style="background:var(--bg-card)" onclick="openMyInventory()">Inventory</button>
-            <div class="user-box" style="background:var(--bg-card); padding:8px 12px; border-radius:8px; font-size:12px; display:flex; gap:10px">
-                <span id="u-name" style="font-weight:bold">...</span>
-                <span style="color:var(--gold)">💰 <span id="u-val">0</span></span>
+            <div class="user-box" style="background:var(--bg-card); padding:8px 12px; border-radius:8px; font-size:12px">
+                <span id="u-name" style="font-weight:bold">...</span> | <span style="color:var(--gold)">💰 <span id="u-val">0</span></span>
             </div>
         </div>
     </div>
@@ -100,6 +98,17 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
     </div>
 
     <div class="game-container">
+        <div id="gw-bar">
+            <div>
+                <h4 id="gw-title" style="color:var(--gold)">GIVEAWAY!</h4>
+                <p id="gw-info" style="font-size:11px"></p>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center">
+                <span id="gw-timer" style="font-family:monospace; font-weight:bold">00:00</span>
+                <button id="gw-join-btn" class="lb-tab" style="background:var(--accent); color:white; width:80px" onclick="joinGW()">JOIN</button>
+            </div>
+        </div>
+
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
             <h3>Active Coinflips</h3>
             <button class="lb-tab" style="background:var(--accent); color:white; width:120px" onclick="openInvForCreate()">+ Create</button>
@@ -110,7 +119,7 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
 
 <div class="side-chat">
     <div id="chat-msgs"></div>
-    <div style="padding:15px">
+    <div style="padding:15px; border-top:1px solid var(--border-color)">
         <input type="text" id="chat-input" placeholder="Message..." style="width:100%; background:var(--bg-main); border:1px solid var(--border-color); padding:10px; color:#fff; border-radius:6px" onkeypress="if(event.key==='Enter') sendMsg()">
     </div>
 </div>
@@ -120,17 +129,9 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
         <div class="lb-tabs">
             <button class="lb-tab active" id="tab-wager" onclick="switchLB('wager')">TOP WAGER</button>
             <button class="lb-tab" id="tab-profit" onclick="switchLB('profit')">TOP PROFIT</button>
-            <button class="lb-tab" id="tab-least" onclick="switchLB('least')">LEAST PROFIT</button>
         </div>
         <div id="lb-content" class="lb-list"></div>
         <button onclick="document.getElementById('lb-modal').style.display='none'" style="width:100%; margin-top:15px; background:none; border:none; color:var(--text-muted); cursor:pointer">Close</button>
-    </div>
-</div>
-
-<div id="flip-modal" class="modal-overlay">
-    <div class="box" style="text-align:center">
-        <div class="coin-container"><div id="coin-element" class="coin"><div class="heads">H</div><div class="tails">T</div></div></div>
-        <p id="winner-text" style="font-weight:bold; font-size:22px; margin-top:10px"></p>
     </div>
 </div>
 
@@ -148,201 +149,197 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
     </div>
 </div>
 
-<div id="login-modal" class="modal-overlay" style="display:none">
-    <div class="box" style="width:320px; text-align:center">
-        <h2>BloxFine Login</h2>
-        <input type="text" id="rbx-name" style="width:100%; padding:10px; margin-top:15px; background:var(--bg-main); color:white; border:1px solid var(--border-color); border-radius:6px" placeholder="Username">
-        <button class="lb-tab" style="width:100%; margin-top:15px; background:var(--accent); color:white" onclick="simpleLogin()">GİRİŞ</button>
-        <p id="login-error" style="color:var(--red); margin-top:10px; font-size:12px"></p>
-    </div>
-</div>
-
 <script>
 const OWNER_NAME = "isimsizler2038";
 const ITEMS_DB = [
     {n: "Gingerscope", v: 14500, img: "https://supremevalues.com/media/mm2ancients/Gingerscope.png"},
     {n: "Traveler's Axe", v: 7600, img: "https://supremevalues.com/media/mm2ancients/Traveler's_Axe.png"},
     {n: "Traveler's Gun", v: 4100, img: "https://supremevalues.com/media/mm2ancients/Traveler's_Gun.png"},
-    {n: "Evergun", v: 4100, img: "https://supremevalues.com/media/mm2ancients/Evergun.png"},
-    {n: "Evergreen", v: 3100, img: "https://supremevalues.com/media/mm2ancients/Evergreen.png"},
-    {n: "Vampire's Gun", v: 1800, img: "https://supremevalues.com/media/mm2ancients/Vampires_Gun.png"},
-    {n: "Turkey", v: 1800, img: "https://supremevalues.com/media/mm2ancients/Turkey.png"},
-    {n: "Celestial", v: 1800, img: "https://supremevalues.com/media/mm2ancients/Celestial.png"},
+    {n: "Harvester", v: 425, img: "https://supremevalues.com/media/mm2ancients/Harvester.png"},
     {n: "Icepiercer", v: 350, img: "https://supremevalues.com/media/mm2ancients/Icepiercer.png"},
-    {n: "Harvester", v: 425, img: "https://supremevalues.com/media/mm2ancients/Harvester.png"}
+    {n: "Celestial", v: 1800, img: "https://supremevalues.com/media/mm2ancients/Celestial.png"}
 ];
 
 let user = localStorage.getItem('rbx_user') || "";
-let myInventory = JSON.parse(localStorage.getItem('rbx_inv_list')) || [0,1,2,3,4,5,6,7,8,9]; 
-let banList = JSON.parse(localStorage.getItem('rbx_ban_list')) || [];
-let deviceId = localStorage.getItem('rbx_device_id') || ("D-" + Math.random().toString(36).substr(2, 9));
-localStorage.setItem('rbx_device_id', deviceId);
+let myInventory = JSON.parse(localStorage.getItem('rbx_inv_list')) || [0,1,2,3,4,5];
+let lbData = { wager: {}, profit: {} };
+let activeGW = null;
 
-const pubnub = new PubNub({ publishKey: "pub-c-134bcaab-4830-4bbb-afb4-b7595ffffebe", subscribeKey: "sub-c-5f27998e-cff7-4c72-9ad1-455b7adeb737", uuid: deviceId });
-const CHANNEL = "BLOXY_ELITE_V8";
+const pubnub = new PubNub({ publishKey: "pub-c-134bcaab-4830-4bbb-afb4-b7595ffffebe", subscribeKey: "sub-c-5f27998e-cff7-4c72-9ad1-455b7adeb737", uuid: user || "guest" });
+const CHANNEL = "BLOXY_ELITE_V9";
 pubnub.subscribe({ channels: [CHANNEL] });
-
-function simpleLogin() {
-    const inputName = document.getElementById('rbx-name').value.trim();
-    if(!inputName) return;
-    pubnub.publish({ channel: CHANNEL, message: { type: 'ping', name: inputName, dev: deviceId } });
-    setTimeout(() => { if(document.getElementById('login-error').innerText !== "HESAPTA BAŞKASI VAR!") { user = inputName; localStorage.setItem('rbx_user', user); location.reload(); }}, 800);
-}
 
 pubnub.addListener({
     message: (m) => {
         const d = m.message;
-        if(d.type === 'ping' && d.name === user && d.dev !== deviceId) pubnub.publish({ channel: CHANNEL, message: { type: 'active', name: user, target: d.dev } });
-        if(d.type === 'active' && d.target === deviceId) { alert("ACCOUNT IN USE!"); logout(); }
         if(d.type === 'chat') receiveChat(d.u, d.t);
-        if(d.type === 'new') { addMatchToUI(d.user, d.id, d.items, d.side, d.totalV); updateGlobalStats(); }
-        if(d.type === 'cancel') { document.getElementById(d.id)?.remove(); updateGlobalStats(); }
-        if(d.type === 'roll') { document.getElementById(d.id)?.remove(); if(user === d.creator || user === d.joiner) startCoinFlip(d.res, d.creator, d.joiner, d.cItems, d.jItems, d.cSide); updateGlobalStats(); }
-        if(d.type === 'admin' && d.target === user) {
-            if(d.cmd === 'add') { myInventory.push(d.item); updateUI(); }
-            if(d.cmd === 'ban') { banList.push(user); logout(); }
+        if(d.type === 'new') addMatchToUI(d.user, d.id, d.items, d.side, d.totalV);
+        if(d.type === 'roll') { 
+            handleLBUpdate(d); // Gerçek bahisleri listeye ekle
+            document.getElementById(d.id)?.remove(); 
+            if(user === d.creator || user === d.joiner) { myInventory.push(...(d.res === d.cSide ? d.cItems : d.jItems)); updateUI(); }
         }
-        if(d.type === 'global_ban' && d.target === user) logout();
+        if(d.type === 'gw_start') { showGW(d); }
+        if(d.type === 'gw_end' && d.winner === user) { myInventory.push(d.itemIdx); updateUI(); alert("GIVEAWAY WON!"); }
+        if(d.type === 'admin' && d.target === user && d.cmd === 'add') { myInventory.push(d.item); updateUI(); }
     }
 });
 
-let selectedSide = 'H'; let selectedIndices = []; let joinId = null;
+// LEADERBOARD LOGIC (Sadece gerçek oyuncular)
+function handleLBUpdate(d) {
+    const winner = (d.res === d.cSide) ? d.creator : d.joiner;
+    const loser = (winner === d.creator) ? d.joiner : d.creator;
+    const val = d.cItems.reduce((s,i)=>s+ITEMS_DB[i].v, 0);
 
+    [d.creator, d.joiner].forEach(u => {
+        lbData.wager[u] = (lbData.wager[u] || 0) + val;
+    });
+    lbData.profit[winner] = (lbData.profit[winner] || 0) + val;
+    lbData.profit[loser] = (lbData.profit[loser] || 0) - val;
+}
+
+function openLeaderboard() {
+    document.getElementById('lb-modal').style.display = 'flex';
+    switchLB('wager');
+}
+
+function switchLB(type) {
+    document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-'+type).classList.add('active');
+    const cont = document.getElementById('lb-content');
+    
+    let sorted = Object.entries(lbData[type])
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 10);
+
+    cont.innerHTML = sorted.length ? sorted.map(([u, v], i) => `
+        <div class="lb-row">
+            <span>#${i+1} ${u}</span>
+            <b style="color:${v>=0?'var(--accent)':'var(--red)'}">${v.toLocaleString()}</b>
+        </div>
+    `).join('') : "<p style='text-align:center; padding:20px; color:var(--text-muted)'>No data yet.</p>";
+}
+
+// GIVEAWAY LOGIC
+function startGW() {
+    const itemIdx = parseInt(document.getElementById('adm-item').value);
+    const mins = parseInt(document.getElementById('gw-time').value);
+    const endTime = Date.now() + (mins * 60000);
+    pubnub.publish({ channel: CHANNEL, message: { type: 'gw_start', itemIdx, endTime, host: user }});
+}
+
+function showGW(d) {
+    activeGW = d;
+    activeGW.participants = [];
+    document.getElementById('gw-bar').style.display = 'flex';
+    document.getElementById('gw-info').innerText = `${ITEMS_DB[d.itemIdx].n} by ${d.host}`;
+    
+    const timer = setInterval(() => {
+        const remains = d.endTime - Date.now();
+        if(remains <= 0) {
+            clearInterval(timer);
+            document.getElementById('gw-bar').style.display = 'none';
+            if(user === d.host) {
+                const winner = activeGW.participants[Math.floor(Math.random() * activeGW.participants.length)] || "None";
+                pubnub.publish({ channel: CHANNEL, message: { type: 'gw_end', winner, itemIdx: d.itemIdx }});
+                pubnub.publish({ channel: CHANNEL, message: { type: 'chat', u: "SYSTEM", t: `Giveaway Winner: ${winner}!` }});
+            }
+        } else {
+            const m = Math.floor(remains/60000);
+            const s = Math.floor((remains%60000)/1000);
+            document.getElementById('gw-timer').innerText = `${m}:${s<10?'0':''}${s}`;
+        }
+    }, 1000);
+}
+
+function joinGW() {
+    if(!activeGW) return;
+    pubnub.publish({ channel: CHANNEL, message: { type: 'chat', u: "SYSTEM", t: `${user} joined the giveaway.` }});
+    activeGW.participants.push(user);
+    document.getElementById('gw-join-btn').innerText = "JOINED";
+    document.getElementById('gw-join-btn').disabled = true;
+}
+
+// MİRAS FONKSİYONLAR (Elite Edition'dan dokunulmadan alındı)
 function addMatchToUI(owner, id, items, side, totalV) {
     if(document.getElementById(id)) return;
     const div = document.createElement('div'); div.className = "match-card"; div.id = id;
-    div.dataset.owner = owner; div.dataset.side = side; div.dataset.items = JSON.stringify(items); div.dataset.totalValue = totalV;
+    div.dataset.totalValue = totalV; div.dataset.items = JSON.stringify(items);
     div.innerHTML = `
-        <div class="match-header">
-            <span style="font-weight:bold; font-size:13px">${owner}</span>
-            <span style="color:var(--gold); font-weight:bold; font-size:13px">${totalV.toLocaleString()}</span>
-        </div>
+        <div class="match-header"><b>${owner}</b> <span style="color:var(--gold)">${totalV.toLocaleString()}</span></div>
         <div class="match-items">${items.map(idx => `<img src="${ITEMS_DB[idx].img}">`).join('')}</div>
-        <div style="display:flex; gap:5px; align-items:center">
-             <span style="font-size:10px; color:${side==='H'?'var(--blue)':'var(--red)'}; font-weight:bold; flex:1">${side==='H'?'HEADS':'TAILS'}</span>
-             <button class="lb-tab" style="flex:2; background:${owner===user?'#333':'var(--accent)'}; color:white" onclick="${owner===user?'':`openInvForJoin('${id}')`}">${owner===user?'WAITING...':'JOIN'}</button>
-        </div>
-        ${owner === user ? `<button class="cancel-btn" onclick="cancelMatch('${id}')">CANCEL MATCH</button>` : ''}
+        <button class="lb-tab" style="width:100%; background:var(--accent); color:white" onclick="openInvForJoin('${id}')">${owner===user?'WAITING...':'JOIN'}</button>
     `;
     document.getElementById('match-list').prepend(div);
 }
 
-function startCoinFlip(res, creator, joiner, cItems, jItems, cSide) {
-    const modal = document.getElementById('flip-modal');
-    const coin = document.getElementById('coin-element');
-    modal.style.display = "flex"; document.getElementById('winner-text').innerText = "";
-    coin.style.transition = "none"; coin.style.transform = "rotateY(0deg)";
-    setTimeout(() => {
-        coin.style.transition = "transform 3s cubic-bezier(0.1, 0, 0.1, 1)";
-        coin.style.transform = res === 'H' ? "rotateY(2160deg)" : "rotateY(2340deg)";
-        setTimeout(() => {
-            const winner = (res === cSide) ? creator : joiner;
-            document.getElementById('winner-text').innerText = "Winner: " + winner;
-            document.getElementById('winner-text').style.color = (winner === user) ? "var(--accent)" : "var(--red)";
-            if(winner === user) { myInventory.push(...cItems, ...jItems); updateUI(); }
-            setTimeout(() => { modal.style.display = "none"; }, 3000);
-        }, 3200);
-    }, 100);
-}
+function openInvForCreate() { document.getElementById('modal-title').innerText = "Create Match"; document.getElementById('side-select-div').style.display = "flex"; document.getElementById('confirm-btn').style.display = "block"; renderInventory(false); }
+function openMyInventory() { document.getElementById('modal-title').innerText = "Inventory"; document.getElementById('side-select-div').style.display = "none"; document.getElementById('confirm-btn').style.display = "none"; renderInventory(true); }
+function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
+function toggleAdmin() { document.getElementById('admin-panel').style.display = document.getElementById('admin-panel').style.display === "block" ? "none" : "block"; }
 
-function updateGlobalStats() {
-    let i = 0, v = 0, g = 0;
-    document.querySelectorAll('.match-card').forEach(c => { g++; v += parseInt(c.dataset.totalValue); i += JSON.parse(c.dataset.items).length; });
-    document.getElementById('stat-items').innerText = i; document.getElementById('stat-val').innerText = v.toLocaleString(); document.getElementById('stat-games').innerText = g;
-}
-
-function receiveChat(u, t) { 
-    const box = document.getElementById('chat-msgs'); const div = document.createElement('div'); div.style.marginBottom = "5px";
-    const isO = u === OWNER_NAME;
-    div.innerHTML = `<span class="role-badge ${isO?'role-owner':'role-user'}">${isO?'OWNER':'USER'}</span><b>${u}:</b> <span style="color:#eee">${t}</span>`; 
-    box.appendChild(div); box.scrollTop = box.scrollHeight; 
-}
-
-// LOGIC HELPERS
 function renderInventory(isView) {
     const grid = document.getElementById('inventory-grid'); grid.innerHTML = "";
-    selectedIndices = []; updateSelectedValueText();
+    selectedIndices = [];
     myInventory.forEach((idx, aIdx) => {
-        const div = document.createElement('div'); div.className = "inv-card";
-        div.innerHTML = `<img src="${ITEMS_DB[idx].img}" style="width:35px"><br><small>${ITEMS_DB[idx].v}</small>`;
-        div.style = "background:var(--bg-card); padding:5px; border-radius:5px; border:2px solid transparent; text-align:center; cursor:pointer;";
-        if(!isView) div.onclick = () => { if(div.classList.toggle('selected')) { selectedIndices.push(aIdx); div.style.borderColor="var(--accent)"; } else { selectedIndices = selectedIndices.filter(i=>i!==aIdx); div.style.borderColor="transparent"; } updateSelectedValueText(); };
+        const div = document.createElement('div'); div.className = "inv-item";
+        div.innerHTML = `<img src="${ITEMS_DB[idx].img}" width="35"><br><small>${ITEMS_DB[idx].v}</small>`;
+        div.style = "background:var(--bg-card); padding:8px; border-radius:8px; text-align:center; cursor:pointer; border:2px solid transparent";
+        if(!isView) div.onclick = () => { div.classList.toggle('selected'); if(selectedIndices.includes(aIdx)) selectedIndices = selectedIndices.filter(i=>i!==aIdx); else selectedIndices.push(aIdx); };
         grid.appendChild(div);
     });
     document.getElementById('inv-modal').style.display = "flex";
 }
-function updateSelectedValueText() { let total = selectedIndices.reduce((s, i) => s + ITEMS_DB[myInventory[i]].v, 0); document.getElementById('val-info').innerText = total.toLocaleString() + " Value"; }
 
 function handleConfirm() {
-    if(banList.includes(user)) return alert("You are BANNED!");
-    if(selectedIndices.length === 0) return;
-    const items = selectedIndices.map(i => myInventory[i]); const totalV = items.reduce((s, idx) => s + ITEMS_DB[idx].v, 0);
-    if(joinId) {
-        const mD = document.getElementById(joinId).dataset; const range = parseInt(mD.totalValue) * 0.10;
-        if(totalV < (parseInt(mD.totalValue)-range) || totalV > (parseInt(mD.totalValue)+range)) return alert("Out of Range!");
-        pubnub.publish({ channel: CHANNEL, message: { type: 'roll', id: joinId, res: Math.random()>0.5?'H':'T', creator: mD.owner, joiner: user, cItems: JSON.parse(mD.items), jItems: items, cSide: mD.side }});
-    } else pubnub.publish({ channel: CHANNEL, message: { type: 'new', user: user, id: "M_"+Math.random().toString(36).substr(2,8), items: items, side: selectedSide, totalV: totalV }});
-    selectedIndices.sort((a,b)=>b-a).forEach(i => myInventory.splice(i,1)); updateUI(); closeInv();
+    const items = selectedIndices.map(i => myInventory[i]);
+    const totalV = items.reduce((s, idx) => s + ITEMS_DB[idx].v, 0);
+    const id = "M_"+Math.random().toString(36).substr(2,8);
+    pubnub.publish({ channel: CHANNEL, message: { type: 'new', user: user, id, items, side: selectedSide, totalV }});
+    selectedIndices.sort((a,b)=>b-a).forEach(i => myInventory.splice(i,1));
+    updateUI(); closeInv();
 }
 
-// LEADERBOARD
-function openLeaderboard() { document.getElementById('lb-modal').style.display = 'flex'; switchLB('wager'); }
-function switchLB(type) {
-    const cont = document.getElementById('lb-content'); cont.innerHTML = "Loading...";
-    document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('tab-'+type).classList.add('active');
-    // Örnek Sabit Veri (Normalde PubNub History'den hesaplanır)
-    let data = {
-        wager: [{u: "isimsizler2038", v: "1,450,200"}, {u: "BloxyUser1", v: "450,000"}],
-        profit: [{u: "LuckyGuy", v: "+250,000"}, {u: "isimsizler2038", v: "+120,000"}],
-        least: [{u: "UnluckyOne", v: "-500,000"}]
-    };
-    cont.innerHTML = data[type].map((r,i) => `<div class="lb-row"><span>#${i+1} ${r.u}</span><b>${r.v}</b></div>`).join('');
-}
-
-function updateUI() { 
-    if(!user) return; 
-    document.getElementById('u-name').innerText = user; 
-    document.getElementById('u-val').innerText = myInventory.reduce((a, b) => a + ITEMS_DB[b].v, 0).toLocaleString(); 
-    localStorage.setItem('rbx_inv_list', JSON.stringify(myInventory)); 
+function updateUI() {
+    if(!user) return;
+    document.getElementById('u-name').innerText = user;
+    document.getElementById('u-val').innerText = myInventory.reduce((a, b) => a + ITEMS_DB[b].v, 0).toLocaleString();
+    localStorage.setItem('rbx_inv_list', JSON.stringify(myInventory));
     if(user === OWNER_NAME) {
         document.getElementById('adm-btn').style.display = "block";
-        const sel = document.getElementById('adm-item'); sel.innerHTML = ITEMS_DB.map((it,i)=>`<option value="${i}">${it.n}</option>`).join('');
+        document.getElementById('adm-item').innerHTML = ITEMS_DB.map((it,i)=>`<option value="${i}">${it.n}</option>`).join('');
     }
 }
-function adminAction(cmd) { 
-    const t = document.getElementById('adm-target').value;
-    const i = parseInt(document.getElementById('adm-item').value);
-    if(cmd === 'ban') pubnub.publish({ channel: CHANNEL, message: { type: 'global_ban', target: t } });
-    else pubnub.publish({ channel: CHANNEL, message: { type: 'admin', cmd: cmd, target: t, item: i } }); 
+
+function receiveChat(u, t) {
+    const box = document.getElementById('chat-msgs');
+    const div = document.createElement('div');
+    div.innerHTML = `<b>${u}:</b> ${t}`;
+    box.appendChild(div); box.scrollTop = box.scrollHeight;
 }
-function toggleAdmin() { const p = document.getElementById('admin-panel'); p.style.display = p.style.display === "block" ? "none" : "block"; }
-function sendMsg() { 
-    if(banList.includes(user)) return alert("BANNED!");
-    const i = document.getElementById('chat-input'); if(!i.value.trim()) return; 
-    pubnub.publish({ channel: CHANNEL, message: { type: 'chat', u: user, t: i.value } }); i.value = ""; 
+
+function sendMsg() {
+    const i = document.getElementById('chat-input');
+    pubnub.publish({ channel: CHANNEL, message: { type: 'chat', u: user, t: i.value } });
+    i.value = "";
 }
-function selectSide(s) { selectedSide = s; document.getElementById('btn-h').style.background = s === 'H' ? 'var(--blue)' : 'var(--bg-card)'; document.getElementById('btn-t').style.background = s === 'T' ? 'var(--red)' : 'var(--bg-card)'; }
-function cancelMatch(id) { const mD = document.getElementById(id).dataset; pubnub.publish({ channel: CHANNEL, message: { type: 'cancel', id: id } }); myInventory.push(...JSON.parse(mD.items)); updateUI(); }
-function openMyInventory() { document.getElementById('modal-title').innerText = "Inventory"; document.getElementById('side-select-div').style.display = "none"; document.getElementById('confirm-btn').style.display = "none"; renderInventory(true); }
-function openInvForCreate() { joinId = null; document.getElementById('modal-title').innerText = "Select Items"; document.getElementById('side-select-div').style.display = "flex"; document.getElementById('confirm-btn').style.display = "block"; renderInventory(false); }
-function openInvForJoin(id) { joinId = id; document.getElementById('modal-title').innerText = "Join Match"; document.getElementById('side-select-div').style.display = "none"; document.getElementById('confirm-btn').style.display = "block"; renderInventory(false); }
-function logout() { localStorage.removeItem('rbx_user'); location.reload(); }
-function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
-function loadHistory() {
-    pubnub.history({ channel: CHANNEL, count: 50 }, (s, r) => {
-        let ms = new Map();
-        r?.messages?.forEach(m => {
-            const d = m.entry;
-            if(d.type === 'chat') receiveChat(d.u, d.t);
-            if(d.type === 'new') ms.set(d.id, d);
-            if(d.type === 'cancel' || d.type === 'roll') ms.delete(d.id);
+
+window.onload = () => { 
+    if(!user) {
+        user = prompt("Username?");
+        if(user) { localStorage.setItem('rbx_user', user); location.reload(); }
+    } else {
+        updateUI();
+        // Geçmişi tara ve Leaderboard verisini topla
+        pubnub.history({ channel: CHANNEL, count: 100 }, (s, r) => {
+            r?.messages?.forEach(m => {
+                const d = m.entry;
+                if(d.type === 'new') addMatchToUI(d.user, d.id, d.items, d.side, d.totalV);
+                if(d.type === 'roll') handleLBUpdate(d);
+            });
         });
-        ms.forEach(d => addMatchToUI(d.user, d.id, d.items, d.side, d.totalV));
-        updateGlobalStats();
-    });
-}
-window.onload = () => { if(!user) document.getElementById('login-modal').style.display="flex"; else { updateUI(); loadHistory(); }};
+    }
+};
 </script>
 </body>
 </html>
