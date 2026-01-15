@@ -2,62 +2,35 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Bloxy Fine | Elite Edition</title>
+<title>Bloxy Fine | Elite Stable</title>
 <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
 <style>
-:root {
-    --bg-main: #0e1015;
-    --bg-panel: #1a1d27;
-    --bg-card: #242834;
-    --accent: #2ecc71;
-    --text-main: #ffffff;
-    --text-muted: #8a919e;
-    --border-color: #2d3241;
-    --red: #ff4d4d;
-    --blue: #3498db;
-    --gold: #f1c40f;
-}
-
+:root { --bg-main: #0e1015; --bg-panel: #1a1d27; --bg-card: #242834; --accent: #2ecc71; --text-main: #ffffff; --text-muted: #8a919e; --border-color: #2d3241; --red: #ff4d4d; --blue: #3498db; --gold: #f1c40f; }
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
 body { background: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
-
 .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .top-nav { height: 70px; background: var(--bg-panel); border-bottom: 2px solid var(--border-color); display: flex; align-items: center; padding: 0 30px; justify-content: space-between; }
 .logo { font-size: 20px; font-weight: 800; color: var(--accent); }
-
 .stats-bar { background: #14171f; padding: 12px 30px; border-bottom: 1px solid var(--border-color); display: flex; gap: 30px; font-size: 11px; color: var(--text-muted); }
-.stats-bar b { color: var(--text-main); }
-
-/* ROLES */
-.role-badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-right: 6px; text-transform: uppercase; display: inline-block; vertical-align: middle; }
-.role-owner { background: var(--red); color: white; box-shadow: 0 0 5px var(--red); }
-.role-whale { background: var(--gold); color: black; box-shadow: 0 0 5px var(--gold); }
+.role-badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-right: 6px; text-transform: uppercase; }
+.role-owner { background: var(--red); color: white; }
+.role-whale { background: var(--gold); color: black; }
 .role-highroller { background: #9b59b6; color: white; }
 .role-member { background: #555; color: white; }
-
 .game-container { flex: 1; padding: 20px; overflow-y: auto; }
-.btn-small { padding: 6px 12px !important; font-size: 10px !important; width: auto !important; height: auto !important; }
-
+#gw-bar { background: linear-gradient(90deg, #1a1d27, #242834); border: 1px solid var(--accent); margin-bottom: 15px; padding: 15px; border-radius: 10px; display: none; align-items: center; justify-content: space-between; }
 .match-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
-.match-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; position: relative; }
-.match-items { display: flex; gap: 5px; margin: 10px 0; overflow-x: auto; }
-.match-items img { width: 35px; height: 35px; background: var(--bg-card); border-radius: 5px; padding: 3px; border: 1px solid var(--border-color); }
-
+.match-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
+.match-items img { width: 35px; height: 35px; background: var(--bg-card); border-radius: 5px; margin-right: 5px; border: 1px solid var(--border-color); }
 .side-chat { width: 300px; background: var(--bg-panel); border-left: 2px solid var(--border-color); display: flex; flex-direction: column; }
 #chat-msgs { flex: 1; overflow-y: auto; padding: 15px; font-size: 12px; }
-
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
 .box { background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 450px; border: 1px solid var(--border-color); position: relative; }
-
-.lb-tab { padding: 8px 15px; border: none; background: var(--bg-card); color: var(--text-muted); cursor: pointer; font-size: 11px; font-weight: bold; border-radius: 6px; transition: 0.2s; }
-.lb-tab:hover { background: #2d3241; }
-.lb-tab.active { color: var(--accent); border: 1px solid var(--accent); }
-
+.lb-tab { padding: 6px 12px; border: none; background: var(--bg-card); color: #fff; cursor: pointer; font-size: 11px; font-weight: bold; border-radius: 6px; }
 #admin-panel { position: fixed; bottom: 80px; right: 320px; background: var(--bg-panel); border: 2px solid var(--red); padding: 15px; border-radius: 12px; z-index: 10001; display: none; width: 280px; }
 .admin-badge { position: fixed; bottom: 20px; right: 320px; background: var(--red); color: white; padding: 12px; border-radius: 50%; cursor: pointer; z-index: 10002; font-weight: bold; display: none; }
-
-.inv-item { background: var(--bg-card); padding: 8px; border-radius: 8px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
-.inv-item.selected { border-color: var(--accent) !important; background: #1a2a1f !important; }
+.inv-item { background: var(--bg-card); padding: 8px; border-radius: 8px; text-align: center; cursor: pointer; border: 2px solid transparent; }
+.inv-item.selected { border-color: var(--accent) !important; }
 </style>
 </head>
 <body>
@@ -66,7 +39,10 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
     <h4 style="color:var(--red); margin-bottom:10px">ADMIN PANEL</h4>
     <input type="text" id="adm-target" placeholder="Target User" style="width:100%; margin-bottom:8px; padding:8px; background:#000; color:#fff; border:1px solid #333">
     <select id="adm-item" style="width:100%; margin-bottom:12px; padding:8px; background:#000; color:#fff; border:1px solid #333"></select>
-    <button class="lb-tab" style="width:100%; background:var(--accent); color:white; margin-bottom:5px" onclick="adminAction('add')">GIVE ITEM</button>
+    <button class="lb-tab" style="width:100%; background:var(--accent); margin-bottom:10px" onclick="adminAction('add')">GIVE ITEM</button>
+    <hr style="border-color:#333; margin:10px 0">
+    <input type="number" id="gw-time" placeholder="Dakika" value="5" style="width:100%; background:#000; color:#fff; margin-bottom:5px; padding:5px">
+    <button class="lb-tab" style="width:100%; background:var(--gold); color:#000" onclick="startGW()">START GIVEAWAY</button>
 </div>
 <div class="admin-badge" id="adm-btn" onclick="toggleAdmin()">ADM</div>
 
@@ -76,21 +52,25 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
         <div style="display:flex; gap:10px; align-items:center">
             <button class="lb-tab" onclick="openLeaderboard()">Leaderboard</button>
             <button class="lb-tab" onclick="openMyInventory()">Inventory</button>
-            <div class="user-box" style="background:var(--bg-card); padding:8px 15px; border-radius:8px; font-size:12px; border:1px solid var(--border-color)">
-                <span id="u-name" style="font-weight:bold">...</span> | <span style="color:var(--gold)">💰 <span id="u-val">0</span></span>
+            <div class="user-box" style="background:var(--bg-card); padding:8px 15px; border-radius:8px; font-size:12px">
+                <span id="u-name">...</span> | <span style="color:var(--gold)">💰 <span id="u-val">0</span></span>
             </div>
         </div>
     </div>
 
     <div class="stats-bar">
-        <span>GAMES: <b id="stat-games">0</b></span>
-        <span>VALUE: <b id="stat-val">0</b></span>
+        <span>ACTIVE GAMES: <b id="stat-games">0</b></span>
+        <span>TOTAL VALUE: <b id="stat-val">0</b></span>
     </div>
 
     <div class="game-container">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-            <h3>Active Flips</h3>
-            <button class="lb-tab btn-small" style="background:var(--accent); color:white" onclick="openInvForCreate()">+ CREATE MATCH</button>
+        <div id="gw-bar">
+            <div><h4 id="gw-title" style="color:var(--gold)">GIVEAWAY</h4><p id="gw-info" style="font-size:11px"></p></div>
+            <div style="display:flex; gap:10px; align-items:center"><span id="gw-timer">00:00</span><button class="lb-tab" style="background:var(--accent)" onclick="joinGW()">JOIN</button></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px">
+            <h3>Coinflips</h3>
+            <button class="lb-tab" style="background:var(--accent)" onclick="openInvForCreate()">+ CREATE MATCH</button>
         </div>
         <div id="match-list" class="match-list"></div>
     </div>
@@ -99,7 +79,15 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
 <div class="side-chat">
     <div id="chat-msgs"></div>
     <div style="padding:15px; border-top:1px solid var(--border-color)">
-        <input type="text" id="chat-input" placeholder="Say something..." style="width:100%; background:var(--bg-main); border:1px solid var(--border-color); padding:10px; color:#fff; border-radius:6px" onkeypress="if(event.key==='Enter') sendMsg()">
+        <input type="text" id="chat-input" placeholder="Chat here..." style="width:100%; background:var(--bg-main); border:1px solid var(--border-color); padding:10px; color:#fff; border-radius:6px" onkeypress="if(event.key==='Enter') sendMsg()">
+    </div>
+</div>
+
+<div id="lb-modal" class="modal-overlay">
+    <div class="box">
+        <h3 style="margin-bottom:15px">Top Wager</h3>
+        <div id="lb-content"></div>
+        <button class="lb-tab" style="width:100%; margin-top:15px" onclick="document.getElementById('lb-modal').style.display='none'">CLOSE</button>
     </div>
 </div>
 
@@ -107,14 +95,12 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
     <div class="box">
         <h3 id="modal-title" style="margin-bottom:15px">Inventory</h3>
         <div id="side-select-div" style="display:flex; gap:10px; margin-bottom:15px">
-            <button class="lb-tab" id="btn-h" style="flex:1; background:var(--blue); color:white" onclick="selectSide('H')">HEADS</button>
+            <button class="lb-tab" id="btn-h" style="flex:1; background:var(--blue)" onclick="selectSide('H')">HEADS</button>
             <button class="lb-tab" id="btn-t" style="flex:1" onclick="selectSide('T')">TAILS</button>
         </div>
-        <div id="inventory-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-height:300px; overflow-y:auto; padding:5px"></div>
-        <div style="margin-top:15px; display:flex; flex-direction:column; gap:8px">
-            <button class="lb-tab" id="confirm-btn" style="background:var(--accent); color:white" onclick="handleConfirm()">CONFIRM</button>
-            <button class="lb-tab" onclick="closeInv()" style="background:transparent; border:none">CANCEL</button>
-        </div>
+        <div id="inventory-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-height:300px; overflow-y:auto"></div>
+        <button class="lb-tab" id="confirm-btn" style="width:100%; background:var(--accent); margin-top:15px" onclick="handleConfirm()">CONFIRM</button>
+        <button class="lb-tab" style="width:100%; margin-top:5px; background:none" onclick="closeInv()">CANCEL</button>
     </div>
 </div>
 
@@ -130,10 +116,11 @@ const ITEMS_DB = [
 
 let user = localStorage.getItem('rbx_user') || "";
 let myInventory = JSON.parse(localStorage.getItem('rbx_inv_list')) || [0,1,2,3,4];
-let selectedIndices = []; let selectedSide = 'H'; let joinId = null;
+let selectedIndices = []; let selectedSide = 'H'; let activeGW = null;
+let lbStats = {};
 
 const pubnub = new PubNub({ publishKey: "pub-c-134bcaab-4830-4bbb-afb4-b7595ffffebe", subscribeKey: "sub-c-5f27998e-cff7-4c72-9ad1-455b7adeb737", uuid: user || "guest" });
-const CHANNEL = "BLOXY_ELITE_V15";
+const CHANNEL = "BLOXY_FINAL_FIX";
 pubnub.subscribe({ channels: [CHANNEL] });
 
 pubnub.addListener({
@@ -142,14 +129,16 @@ pubnub.addListener({
         if(d.type === 'chat') receiveChat(d.u, d.t, d.val);
         if(d.type === 'new') addMatchToUI(d.user, d.id, d.items, d.side, d.totalV);
         if(d.type === 'cancel') document.getElementById(d.id)?.remove();
+        if(d.type === 'gw_start') startGWDisplay(d);
         if(d.type === 'admin' && d.target === user) { myInventory.push(d.item); updateUI(); }
+        if(d.type === 'roll') { document.getElementById(d.id)?.remove(); updateLBData(d); }
     }
 });
 
-function getRole(username, value) {
-    if(username === OWNER_NAME) return { n: "OWNER", c: "role-owner" };
-    if(value >= 1000000) return { n: "WHALE", c: "role-whale" };
-    if(value >= 100000) return { n: "HIGHROLLER", c: "role-highroller" };
+function getRole(u, val) {
+    if(u === OWNER_NAME) return { n: "OWNER", c: "role-owner" };
+    if(val >= 1000000) return { n: "WHALE", c: "role-whale" };
+    if(val >= 100000) return { n: "HIGHROLLER", c: "role-highroller" };
     return { n: "MEMBER", c: "role-member" };
 }
 
@@ -157,109 +146,112 @@ function receiveChat(u, t, val = 0) {
     const box = document.getElementById('chat-msgs');
     const role = getRole(u, val);
     const div = document.createElement('div');
-    div.style.marginBottom = "8px";
-    div.innerHTML = `<span class="role-badge ${role.c}">${role.n}</span><b style="color:#eee">${u}:</b> <span style="color:var(--text-muted)">${t}</span>`;
+    div.style.marginBottom = "5px";
+    div.innerHTML = `<span class="role-badge ${role.c}">${role.n}</span><b>${u}:</b> ${t}`;
     box.appendChild(div); box.scrollTop = box.scrollHeight;
 }
 
 function sendMsg() {
-    const i = document.getElementById('chat-input');
-    if(!i.value.trim()) return;
-    const totalVal = myInventory.reduce((a,b)=>a+ITEMS_DB[b].v, 0);
-    pubnub.publish({ channel: CHANNEL, message: { type: 'chat', u: user, t: i.value, val: totalVal } });
+    const i = document.getElementById('chat-input'); if(!i.value.trim()) return;
+    const v = myInventory.reduce((a,b)=>a+ITEMS_DB[b].v, 0);
+    pubnub.publish({ channel: CHANNEL, message: { type: 'chat', u: user, t: i.value, val: v } });
     i.value = "";
 }
 
-function openInvForCreate() {
-    joinId = null;
-    document.getElementById('modal-title').innerText = "Create Match";
-    document.getElementById('side-select-div').style.display = "flex";
-    document.getElementById('confirm-btn').style.display = "block";
-    renderInventory(false);
+function updateLBData(d) {
+    [d.creator, d.joiner].forEach(p => { lbStats[p] = (lbStats[p] || 0) + d.totalV; });
 }
 
-function renderInventory(isView) {
-    const grid = document.getElementById('inventory-grid');
-    grid.innerHTML = ""; selectedIndices = [];
-    myInventory.forEach((idx, aIdx) => {
-        const item = document.createElement('div');
-        item.className = "inv-item";
-        item.innerHTML = `<img src="${ITEMS_DB[idx].img}" width="35"><br><small style="color:var(--gold)">${ITEMS_DB[idx].v}</small>`;
-        if(!isView) {
-            item.onclick = (e) => {
-                e.stopPropagation();
-                if(item.classList.toggle('selected')) selectedIndices.push(aIdx);
-                else selectedIndices = selectedIndices.filter(i => i !== aIdx);
-            };
-        }
-        grid.appendChild(item);
-    });
-    document.getElementById('inv-modal').style.display = "flex";
-}
-
-function selectSide(s) {
-    selectedSide = s;
-    document.getElementById('btn-h').style.background = s === 'H' ? 'var(--blue)' : 'var(--bg-card)';
-    document.getElementById('btn-t').style.background = s === 'T' ? 'var(--red)' : 'var(--bg-card)';
-}
-
-function handleConfirm() {
-    if(selectedIndices.length === 0) return alert("Select items!");
-    const items = selectedIndices.map(i => myInventory[i]);
-    const totalV = items.reduce((s, idx) => s + ITEMS_DB[idx].v, 0);
-    const id = "M_" + Math.random().toString(36).substr(2, 8);
-    
-    pubnub.publish({ channel: CHANNEL, message: { type: 'new', user: user, id, items, side: selectedSide, totalV } });
-    
-    selectedIndices.sort((a,b)=>b-a).forEach(i => myInventory.splice(i,1));
-    updateUI(); closeInv();
+function openLeaderboard() {
+    const cont = document.getElementById('lb-content');
+    const sorted = Object.entries(lbStats).sort(([,a],[,b]) => b-a).slice(0,10);
+    cont.innerHTML = sorted.map(([u,v],i)=>`<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #333"><span>#${i+1} ${u}</span><b>${v.toLocaleString()}</b></div>`).join('');
+    if(!sorted.length) cont.innerHTML = "No bets yet.";
+    document.getElementById('lb-modal').style.display = 'flex';
 }
 
 function addMatchToUI(owner, id, items, side, totalV) {
     if(document.getElementById(id)) return;
     const div = document.createElement('div'); div.className = "match-card"; div.id = id;
     div.innerHTML = `
-        <div style="display:flex; justify-content:space-between"><b>${owner}</b> <span style="color:var(--gold)">${totalV.toLocaleString()}</span></div>
-        <div class="match-items">${items.map(idx => `<img src="${ITEMS_DB[idx].img}">`).join('')}</div>
-        <button class="lb-tab" style="width:100%; background:var(--accent); color:white">${owner===user?'WAITING...':'JOIN MATCH'}</button>
-        ${owner===user?`<button class="lb-tab" style="width:100%; margin-top:5px; background:#331a1a; color:var(--red)" onclick="cancelMatch('${id}','${JSON.stringify(items)}')">CANCEL</button>`:''}
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px"><b>${owner}</b> <span style="color:var(--gold)">💰 ${totalV.toLocaleString()}</span></div>
+        <div class="match-items" style="margin-bottom:10px">${items.map(idx => `<img src="${ITEMS_DB[idx].img}">`).join('')}</div>
+        <button class="lb-tab" style="width:100%; background:var(--accent)" onclick="joinMatch('${id}')">${owner===user?'WAITING...':'JOIN MATCH'}</button>
+        ${owner===user?`<button class="lb-tab" style="width:100%; margin-top:5px; background:var(--red)" onclick="cancelMatch('${id}','${JSON.stringify(items)}')">CANCEL</button>`:''}
     `;
     document.getElementById('match-list').prepend(div);
 }
 
-function cancelMatch(id, its) {
-    pubnub.publish({ channel: CHANNEL, message: { type: 'cancel', id } });
-    myInventory.push(...JSON.parse(its)); updateUI();
+function cancelMatch(id, its) { pubnub.publish({ channel: CHANNEL, message: { type: 'cancel', id } }); myInventory.push(...JSON.parse(its)); updateUI(); }
+function joinMatch(id) { alert("Joining match..."); /* Join logic here */ }
+
+function startGW() {
+    const itemIdx = parseInt(document.getElementById('adm-item').value);
+    const mins = parseInt(document.getElementById('gw-time').value);
+    pubnub.publish({ channel: CHANNEL, message: { type: 'gw_start', itemIdx, endTime: Date.now() + mins*60000, host: user }});
+}
+
+function startGWDisplay(d) {
+    activeGW = d; document.getElementById('gw-bar').style.display = 'flex';
+    document.getElementById('gw-info').innerText = `${ITEMS_DB[d.itemIdx].n} | Host: ${d.host}`;
+    const timer = setInterval(() => {
+        const rem = d.endTime - Date.now();
+        if(rem <= 0) { clearInterval(timer); document.getElementById('gw-bar').style.display = 'none'; }
+        else {
+            const m = Math.floor(rem/60000); const s = Math.floor((rem%60000)/1000);
+            document.getElementById('gw-timer').innerText = `${m}:${s<10?'0':''}${s}`;
+        }
+    }, 1000);
+}
+
+function joinGW() { alert("Joined giveaway!"); }
+
+function openInvForCreate() { document.getElementById('modal-title').innerText="Create Match"; document.getElementById('side-select-div').style.display="flex"; document.getElementById('confirm-btn').style.display="block"; renderInventory(false); }
+function renderInventory(isView) {
+    const grid = document.getElementById('inventory-grid'); grid.innerHTML = "";
+    myInventory.forEach((idx, aIdx) => {
+        const div = document.createElement('div'); div.className = "inv-item";
+        div.innerHTML = `<img src="${ITEMS_DB[idx].img}" width="30"><br><small>${ITEMS_DB[idx].v}</small>`;
+        if(!isView) div.onclick = () => { div.classList.toggle('selected'); if(selectedIndices.includes(aIdx)) selectedIndices = selectedIndices.filter(i=>i!==aIdx); else selectedIndices.push(aIdx); };
+        grid.appendChild(div);
+    });
+    document.getElementById('inv-modal').style.display = "flex";
+}
+
+function handleConfirm() {
+    if(!selectedIndices.length) return;
+    const items = selectedIndices.map(i => myInventory[i]);
+    const totalV = items.reduce((s,i)=>s+ITEMS_DB[i].v, 0);
+    pubnub.publish({ channel: CHANNEL, message: { type: 'new', user, id: "M_"+Date.now(), items, side: selectedSide, totalV } });
+    selectedIndices.sort((a,b)=>b-a).forEach(i => myInventory.splice(i,1));
+    updateUI(); closeInv();
 }
 
 function updateUI() {
-    if(!user) return;
-    document.getElementById('u-name').innerText = user;
+    if(!user) return; document.getElementById('u-name').innerText = user;
     document.getElementById('u-val').innerText = myInventory.reduce((a,b)=>a+ITEMS_DB[b].v, 0).toLocaleString();
     localStorage.setItem('rbx_inv_list', JSON.stringify(myInventory));
-    if(user === OWNER_NAME) {
-        document.getElementById('adm-btn').style.display = "block";
-        document.getElementById('adm-item').innerHTML = ITEMS_DB.map((it,i)=>`<option value="${i}">${it.n}</option>`).join('');
-    }
+    if(user === OWNER_NAME) { document.getElementById('adm-btn').style.display="block"; document.getElementById('adm-item').innerHTML = ITEMS_DB.map((it,i)=>`<option value="${i}">${it.n}</option>`).join(''); }
 }
 
-function toggleAdmin() { document.getElementById('admin-panel').style.display = document.getElementById('admin-panel').style.display === "block" ? "none" : "block"; }
-function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
-function openMyInventory() { document.getElementById('modal-title').innerText = "My Inventory"; document.getElementById('side-select-div').style.display = "none"; document.getElementById('confirm-btn').style.display = "none"; renderInventory(true); }
-function openLeaderboard() { alert("Leaderboard updating..."); }
+function toggleAdmin() { document.getElementById('admin-panel').style.display = document.getElementById('admin-panel').style.display === 'block' ? 'none' : 'block'; }
+function closeInv() { document.getElementById('inv-modal').style.display = 'none'; selectedIndices = []; }
+function selectSide(s) { selectedSide = s; document.getElementById('btn-h').style.background = s==='H'?'var(--blue)':''; document.getElementById('btn-t').style.background = s==='T'?'var(--red)':''; }
+function openMyInventory() { document.getElementById('modal-title').innerText="My Inventory"; document.getElementById('side-select-div').style.display="none"; document.getElementById('confirm-btn').style.display="none"; renderInventory(true); }
 
 window.onload = () => {
-    if(!user) { user = prompt("Roblox Username?"); if(user) { localStorage.setItem('rbx_user', user); location.reload(); } }
+    if(!user) { user = prompt("Name?"); if(user) { localStorage.setItem('rbx_user', user); location.reload(); } }
     updateUI();
     pubnub.history({ channel: CHANNEL, count: 50 }, (s, r) => {
-        let ms = new Map();
+        let activeMs = new Map();
         r?.messages?.forEach(m => {
             const d = m.entry;
             if(d.type === 'chat') receiveChat(d.u, d.t, d.val);
-            if(d.type === 'new') ms.set(d.id, d);
-            if(d.type === 'cancel') ms.delete(d.id);
+            if(d.type === 'new') activeMs.set(d.id, d);
+            if(d.type === 'cancel' || d.type === 'roll') activeMs.delete(d.id);
+            if(d.type === 'roll') updateLBData(d);
         });
-        ms.forEach(d => addMatchToUI(d.user, d.id, d.items, d.side, d.totalV));
+        activeMs.forEach(d => addMatchToUI(d.user, d.id, d.items, d.side, d.totalV));
     });
 }
 </script>
