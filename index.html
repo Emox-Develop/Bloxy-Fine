@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Bloxy Fine | Live Spectate Edition</title>
+<title>Bloxy Fine | Fix Edition</title>
 <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
 <style>
 :root {
@@ -19,67 +19,63 @@
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
 body { background: var(--bg-main); color: #fff; display: flex; height: 100vh; overflow: hidden; }
 
-/* LAYOUT */
 .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .top-nav { height: 60px; background: var(--bg-panel); border-bottom: 1px solid #2d3241; display: flex; align-items: center; padding: 0 20px; justify-content: space-between; }
-.stats-bar { background: #0e1117; padding: 10px 25px; display: flex; gap: 25px; font-size: 11px; color: var(--text-muted); border-bottom: 1px solid #1e222d; }
+.stats-bar { background: #0e1117; padding: 12px 25px; display: flex; gap: 30px; font-size: 11px; color: var(--text-muted); border-bottom: 1px solid #1e222d; }
+.stats-bar b { color: #fff; }
 
-/* COMPACT BUTTONS */
-.btn-ui { background: var(--bg-card); color: #fff; border: 1px solid #2d3241; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
-.btn-ui:hover { background: #2d3241; }
+.btn-ui { background: var(--bg-card); color: #fff; border: 1px solid #2d3241; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
 .btn-accent { background: var(--accent); border: none; color: #000; }
 
-/* MATCH CARDS & LIVE SPIN */
-.match-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; padding: 20px; overflow-y: auto; }
-.match-card { background: var(--bg-panel); border: 1px solid #2d3241; border-radius: 12px; padding: 15px; position: relative; transition: 0.3s; }
-.match-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; font-weight: bold; }
-.coin-icon { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; }
+.match-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; padding: 20px; overflow-y: auto; }
+.match-card { background: var(--bg-panel); border: 1px solid #2d3241; border-radius: 12px; padding: 15px; position: relative; }
+.match-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; }
+
+.coin-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; }
 .h-icon { background: var(--blue); box-shadow: 0 0 10px var(--blue); }
 .t-icon { background: var(--red); box-shadow: 0 0 10px var(--red); }
 
-/* LIVE SPINNING EFFECT IN CARD */
-.mini-coin { width: 40px; height: 40px; margin: 10px auto; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; animation: spin 0.2s infinite linear; }
-@keyframes spin { 0% { transform: rotateY(0); background: var(--blue); content: 'H'; } 50% { background: var(--red); content: 'T'; } 100% { transform: rotateY(180deg); } }
-
-.match-items { display: flex; gap: 4px; margin: 10px 0; }
-.match-items img { width: 32px; height: 32px; background: #000; border-radius: 4px; padding: 2px; }
-
-/* ADMIN & CHAT */
 .side-chat { width: 280px; background: var(--bg-panel); border-left: 1px solid #2d3241; display: flex; flex-direction: column; }
 #chat-msgs { flex: 1; overflow-y: auto; padding: 15px; font-size: 12px; }
-.role-badge { font-size: 8px; padding: 2px 4px; border-radius: 3px; font-weight: bold; margin-right: 5px; }
-.role-owner { background: var(--red); color: #fff; }
 
 #admin-panel { position: fixed; bottom: 80px; right: 300px; background: var(--bg-panel); border: 2px solid var(--red); padding: 15px; border-radius: 12px; display: none; z-index: 10000; width: 250px; }
 
-/* MODALS */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 9999; }
-.box { background: var(--bg-panel); padding: 20px; border-radius: 12px; width: 400px; border: 1px solid #2d3241; }
+.box { background: var(--bg-panel); padding: 20px; border-radius: 12px; width: 420px; border: 1px solid #2d3241; position: relative; }
+.inv-item { background: #000; padding: 8px; border-radius: 5px; text-align: center; border: 2px solid transparent; cursor: pointer; }
+.inv-item.selected { border-color: var(--accent); }
 </style>
 </head>
 <body>
 
 <div id="admin-panel">
-    <h4 style="color:var(--red)">ADMIN CONTROL</h4><br>
-    <input type="text" id="adm-target" placeholder="User..." style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #333; margin-bottom:10px">
-    <select id="adm-item" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #333; margin-bottom:10px"></select>
-    <button class="btn-ui" onclick="adminAction('add')" style="width:100%; margin-bottom:5px">EŞYA EKLE</button>
-    <button class="btn-ui" onclick="adminAction('ban')" style="width:100%; color:var(--red)">KALICI BAN</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+        <h4 style="color:var(--red)">ADMIN</h4>
+        <span onclick="toggleAdmin()" style="cursor:pointer">✖</span>
+    </div>
+    <input type="text" id="adm-target" placeholder="User..." style="width:100%; padding:8px; margin-bottom:5px; background:#000; color:#fff; border:1px solid #333">
+    <select id="adm-item" style="width:100%; padding:8px; margin-bottom:10px; background:#000; color:#fff; border:1px solid #333"></select>
+    <button class="btn-ui" style="width:100%; margin-bottom:5px" onclick="adminAction('add')">GIVE ITEM</button>
+    <button class="btn-ui" style="width:100%; color:var(--red)" onclick="adminAction('ban')">BAN USER</button>
 </div>
 
 <div class="main-content">
     <div class="top-nav">
-        <div style="font-weight:900; color:var(--accent)">BLOXFINE</div>
-        <div style="display:flex; gap:10px">
+        <div style="font-weight:900; color:var(--accent); font-size:20px">BLOXFINE</div>
+        <div style="display:flex; gap:10px; align-items:center">
             <button class="btn-ui" onclick="openLB()">Leaderboard</button>
             <button class="btn-ui" onclick="openInv('view')">Inventory</button>
             <button class="btn-ui btn-accent" onclick="openInv('create')">CREATE MATCH</button>
-            <div id="u-name" style="font-size:12px; font-weight:bold; align-self:center; margin-left:10px">...</div>
+            <div style="margin-left:10px; text-align:right">
+                <div id="u-name" style="font-size:12px; font-weight:bold">...</div>
+                <div style="font-size:11px; color:var(--gold)">💰 <span id="u-val">0</span></div>
+            </div>
         </div>
     </div>
 
     <div class="stats-bar">
-        <span>ACTIVE: <b id="s-games">0</b></span>
+        <span>ACTIVE GAMES: <b id="s-games">0</b></span>
+        <span>TOTAL ITEMS: <b id="s-items">0</b></span>
         <span>TOTAL VALUE: <b id="s-val">0</b></span>
     </div>
 
@@ -89,15 +85,17 @@ body { background: var(--bg-main); color: #fff; display: flex; height: 100vh; ov
 <div class="side-chat">
     <div id="chat-msgs"></div>
     <div style="padding:10px; border-top:1px solid #2d3241">
-        <input type="text" id="chat-input" placeholder="Type here..." style="width:100%; background:#0b0d12; border:1px solid #2d3241; padding:10px; color:#fff; border-radius:5px" onkeypress="if(event.key==='Enter') sendMsg()">
+        <input type="text" id="chat-input" placeholder="Say something..." style="width:100%; background:#0b0d12; border:1px solid #2d3241; padding:10px; color:#fff; border-radius:5px" onkeypress="if(event.key==='Enter') sendMsg()">
     </div>
 </div>
 
-<div id="main-modal" class="modal">
+<div id="modal-box" class="modal">
     <div class="box">
-        <h3 id="m-title">Inventory</h3><br>
-        <div id="m-extra" style="margin-bottom:10px"></div>
-        <div id="m-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-height:300px; overflow-y:auto"></div>
+        <span onclick="closeModal()" style="position:absolute; top:15px; right:15px; cursor:pointer; color:var(--text-muted)">✖</span>
+        <h3 id="m-title">Title</h3>
+        <p id="m-info" style="color:var(--gold); font-size:12px; margin:10px 0"></p>
+        <div id="m-extra" style="margin-bottom:15px"></div>
+        <div id="m-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-height:280px; overflow-y:auto"></div>
         <div id="m-footer" style="margin-top:20px"></div>
     </div>
 </div>
@@ -110,115 +108,147 @@ const DB = [
     {n: "Traveler's Gun", v: 4100, img: "https://supremevalues.com/media/mm2ancients/Traveler's_Gun.png"},
     {n: "Harvester", v: 425, img: "https://supremevalues.com/media/mm2ancients/Harvester.png"},
     {n: "Icepiercer", v: 350, img: "https://supremevalues.com/media/mm2ancients/Icepiercer.png"},
-    {n: "Evergun", v: 4100, img: "https://supremevalues.com/media/mm2ancients/Evergun.png"}
+    {n: "Evergun", v: 4100, img: "https://supremevalues.com/media/mm2ancients/Evergun.png"},
+    {n: "Celestial", v: 1800, img: "https://supremevalues.com/media/mm2ancients/Celestial.png"}
 ];
 
 let user = localStorage.getItem('rbx_user') || "";
-let inv = JSON.parse(localStorage.getItem('rbx_inv')) || [0,1,2,3,4,5];
-let isBanned = localStorage.getItem('rbx_is_banned') === 'true';
-
-if(isBanned) { document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:100px'>YOU ARE PERMANENTLY BANNED.</h1>"; }
+let inv = JSON.parse(localStorage.getItem('rbx_inv')) || [0,1,2,3,4,5,6];
+let selectedIndices = [];
+let selectedSide = 'H';
 
 const pubnub = new PubNub({ publishKey: "pub-c-134bcaab-4830-4bbb-afb4-b7595ffffebe", subscribeKey: "sub-c-5f27998e-cff7-4c72-9ad1-455b7adeb737", uuid: user || "guest" });
-pubnub.subscribe({ channels: ["BLOX_LIVE_V9"] });
+pubnub.subscribe({ channels: ["BLOX_FINAL_FIX"] });
 
 pubnub.addListener({
     message: (m) => {
         const d = m.message;
         if(d.type === 'chat') renderChat(d.u, d.t);
         if(d.type === 'new') renderMatch(d);
-        if(d.type === 'cancel') document.getElementById(d.id)?.remove();
-        if(d.type === 'start_roll') spectateRoll(d.id); // DİĞERLERİ İZLESİN
+        if(d.type === 'cancel') { document.getElementById(d.id)?.remove(); updateStats(); }
+        if(d.type === 'admin_add' && d.target === user) { inv.push(d.item); updateUI(); }
         if(d.type === 'ban' && d.target === user) { localStorage.setItem('rbx_is_banned', 'true'); location.reload(); }
-        if(d.type === 'admin_add' && d.target === user) { inv.push(d.item); save(); }
     }
 });
 
-function renderMatch(d) {
-    if(document.getElementById(d.id)) return;
-    const div = document.createElement('div'); div.className = "match-card"; div.id = d.id;
-    div.dataset.total = d.total;
-    div.innerHTML = `
-        <div class="match-header">
-            <span>${d.user}</span>
-            <div class="coin-icon ${d.side==='H'?'h-icon':'t-icon'}">${d.side}</div>
-        </div>
-        <div class="match-items">${d.items.map(i => `<img src="${DB[i].img}">`).join('')}</div>
-        <div style="font-weight:bold; color:var(--gold); margin-bottom:10px">💰 ${d.total.toLocaleString()}</div>
-        <div id="roll-${d.id}" class="mini-coin">H</div>
-        <div id="btns-${d.id}">
-            <button class="btn-ui btn-accent" style="width:100%" onclick="joinMatch('${d.id}')">${d.user===user?'WAITING...':'JOIN'}</button>
-            ${d.user===user ? `<button class="btn-ui" style="width:100%; margin-top:5px; color:var(--red)" onclick="cancelMatch('${d.id}')">CANCEL</button>` : ''}
-        </div>
-    `;
-    document.getElementById('match-list').prepend(div);
+function updateUI() {
+    if(!user) return;
+    document.getElementById('u-name').innerText = user;
+    let totalVal = inv.reduce((s, i) => s + DB[i].v, 0);
+    document.getElementById('u-val').innerText = totalVal.toLocaleString();
+    localStorage.setItem('rbx_inv', JSON.stringify(inv));
 }
 
-function spectateRoll(id) {
-    const btnArea = document.getElementById('btns-'+id);
-    const rollArea = document.getElementById('roll-'+id);
-    if(btnArea) btnArea.style.display = 'none';
-    if(rollArea) rollArea.style.display = 'flex';
+function openInv(mode) {
+    selectedIndices = [];
+    const grid = document.getElementById('m-grid');
+    const footer = document.getElementById('m-footer');
+    const extra = document.getElementById('m-extra');
+    grid.innerHTML = ""; footer.innerHTML = ""; extra.innerHTML = "";
     
-    // 3 saniye sonra kazananı gösterip kartı siler (veya kazananı günceller)
-    setTimeout(() => { if(document.getElementById(id)) document.getElementById(id).style.opacity = "0.5"; }, 4000);
+    document.getElementById('m-title').innerText = mode === 'view' ? "My Inventory" : "Create Coinflip";
+    
+    if(mode === 'create') {
+        extra.innerHTML = `<div style="display:flex; gap:10px"><button class="btn-ui" id="b-h" style="flex:1; border-color:var(--blue)" onclick="setSide('H')">HEADS</button><button class="btn-ui" id="b-t" style="flex:1" onclick="setSide('T')">TAILS</button></div>`;
+        footer.innerHTML = `<button class="btn-ui btn-accent" style="width:100%" onclick="postMatch()">POST MATCH</button>`;
+    }
+
+    inv.forEach((itemIdx, arrayIdx) => {
+        const d = document.createElement('div');
+        d.className = "inv-item";
+        d.innerHTML = `<img src="${DB[itemIdx].img}" style="width:40px"><br><small>${DB[itemIdx].v}</small>`;
+        d.onclick = () => {
+            if(mode === 'view') return;
+            if(d.classList.toggle('selected')) selectedIndices.push(arrayIdx);
+            else selectedIndices = selectedIndices.filter(i => i !== arrayIdx);
+        };
+        grid.appendChild(d);
+    });
+    document.getElementById('modal-box').style.display = 'flex';
 }
 
-function joinMatch(id) {
-    const card = document.getElementById(id);
-    const targetV = parseInt(card.dataset.total);
-    // Buraya item seçme ve onaylama mantığı (Önceki kodlarla aynı) eklenecek
-    // Ama kritik nokta: Join olduğunda pubnub'a 'start_roll' mesajı gider.
-    pubnub.publish({ channel: "BLOX_LIVE_V9", message: { type: 'start_roll', id: id } });
+function setSide(s) {
+    selectedSide = s;
+    document.getElementById('b-h').style.backgroundColor = s === 'H' ? 'var(--blue)' : '';
+    document.getElementById('b-t').style.backgroundColor = s === 'T' ? 'var(--red)' : '';
+}
+
+function postMatch() {
+    if(selectedIndices.length === 0) return alert("Select items!");
+    const items = selectedIndices.map(i => inv[i]);
+    const total = items.reduce((s, i) => s + DB[i].v, 0);
+    const id = "M-" + Math.random().toString(36).substr(2, 5);
+    pubnub.publish({ channel: "BLOX_FINAL_FIX", message: { type: 'new', id, user, items, total, side: selectedSide } });
+    selectedIndices.sort((a,b) => b-a).forEach(i => inv.splice(i, 1));
+    updateUI(); closeModal();
+}
+
+function renderMatch(d) {
+    const list = document.getElementById('match-list');
+    const div = document.createElement('div');
+    div.className = "match-card"; div.id = d.id;
+    div.dataset.total = d.total; div.dataset.itemsCount = d.items.length;
+    div.innerHTML = `
+        <div class="match-header"><span>${d.user}</span><div class="coin-icon ${d.side==='H'?'h-icon':'t-icon'}">${d.side}</div></div>
+        <div style="display:flex; gap:5px; margin:10px 0">${d.items.map(i => `<img src="${DB[i].img}" style="width:30px">`).join('')}</div>
+        <div style="color:var(--gold); font-weight:bold; margin-bottom:10px">💰 ${d.total.toLocaleString()}</div>
+        <button class="btn-ui btn-accent" style="width:100%">${d.user===user?'WAITING...':'JOIN'}</button>
+        ${d.user===user ? `<button class="btn-ui" style="width:100%; margin-top:5px; color:var(--red)" onclick="cancelMatch('${d.id}','${JSON.stringify(d.items)}')">CANCEL</button>`:''}
+    `;
+    list.prepend(div); updateStats();
+}
+
+function updateStats() {
+    let g = 0, i = 0, v = 0;
+    document.querySelectorAll('.match-card').forEach(c => {
+        g++; v += parseInt(c.dataset.total); i += parseInt(c.dataset.itemsCount);
+    });
+    document.getElementById('s-games').innerText = g;
+    document.getElementById('s-items').innerText = i;
+    document.getElementById('s-val').innerText = v.toLocaleString();
+}
+
+function cancelMatch(id, itemsStr) {
+    pubnub.publish({ channel: "BLOX_FINAL_FIX", message: { type: 'cancel', id } });
+    inv.push(...JSON.parse(itemsStr)); updateUI();
 }
 
 function renderChat(u, t) {
     const box = document.getElementById('chat-msgs');
-    const isO = u === OWNER;
     const div = document.createElement('div');
-    div.style.marginBottom = "5px";
-    div.innerHTML = `<span class="role-badge ${isO?'role-owner':''}" style="background:${isO?'var(--red)':'#444'}">${isO?'OWNER':'USER'}</span><b>${u}:</b> ${t}`;
+    div.innerHTML = `<span style="color:${u===OWNER?'var(--red)':'var(--text-muted)'}; font-weight:bold">[${u===OWNER?'OWNER':'USER'}] ${u}:</span> ${t}`;
     box.appendChild(div); box.scrollTop = box.scrollHeight;
 }
 
 function sendMsg() {
     const i = document.getElementById('chat-input');
-    if(!i.value || isBanned) return;
-    pubnub.publish({ channel: "BLOX_LIVE_V9", message: { type: 'chat', u: user, t: i.value } });
+    if(!i.value.trim()) return;
+    pubnub.publish({ channel: "BLOX_FINAL_FIX", message: { type: 'chat', u: user, t: i.value } });
     i.value = "";
 }
 
-function adminAction(type) {
-    const target = document.getElementById('adm-target').value;
-    if(type === 'ban') pubnub.publish({ channel: "BLOX_LIVE_V9", message: { type: 'ban', target: target } });
-    if(type === 'add') {
-        const item = document.getElementById('adm-item').value;
-        pubnub.publish({ channel: "BLOX_LIVE_V9", message: { type: 'admin_add', target: target, item: parseInt(item) } });
-    }
-}
-
 function openLB() {
-    document.getElementById('m-title').innerText = "Real-time Leaderboard";
-    document.getElementById('m-grid').innerHTML = "<p style='color:var(--text-muted)'>Scanning active players...</p>";
-    document.getElementById('main-modal').style.display = 'flex';
+    document.getElementById('m-title').innerText = "Leaderboard";
+    document.getElementById('m-grid').innerHTML = `<div style="grid-column: span 4; font-size:12px"><div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #333"><span>#1 isimsizler2038</span><span style="color:var(--accent)">+1,250,000</span></div></div>`;
+    document.getElementById('modal-box').style.display = 'flex';
 }
 
-function save() { 
-    localStorage.setItem('rbx_inv', JSON.stringify(inv)); 
-    document.getElementById('u-name').innerText = user;
+function toggleAdmin() {
+    const p = document.getElementById('admin-panel');
+    p.style.display = p.style.display === 'block' ? 'none' : 'block';
 }
+
+function closeModal() { document.getElementById('modal-box').style.display = 'none'; }
 
 window.onload = () => {
-    if(!user) {
-        user = prompt("Username:");
-        if(user) { localStorage.setItem('rbx_user', user); location.reload(); }
-    }
-    document.getElementById('u-name').innerText = user;
+    if(localStorage.getItem('rbx_is_banned') === 'true') { document.body.innerHTML = "BANNED"; return; }
+    if(!user) { user = prompt("Roblox Username:"); if(user) { localStorage.setItem('rbx_user', user); location.reload(); } }
+    updateUI();
     if(user === OWNER) {
-        document.getElementById('admin-panel').style.display = 'block';
         document.getElementById('adm-item').innerHTML = DB.map((x,i)=>`<option value="${i}">${x.n}</option>`).join('');
+        const btn = document.createElement('button'); btn.className="btn-ui"; btn.innerText="ADM"; btn.onclick=toggleAdmin;
+        document.querySelector('.top-nav div').prepend(btn);
     }
-    // Geçmişi yükleme ve statları güncelleme buraya...
 }
 </script>
 </body>
