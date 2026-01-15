@@ -28,64 +28,55 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
 .stats-bar { background: #14171f; padding: 12px 30px; border-bottom: 1px solid var(--border-color); display: flex; gap: 30px; font-size: 11px; color: var(--text-muted); }
 .stats-bar b { color: var(--text-main); }
 
+/* ROLES */
+.role-badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-right: 6px; text-transform: uppercase; display: inline-block; vertical-align: middle; }
+.role-owner { background: var(--red); color: white; box-shadow: 0 0 5px var(--red); }
+.role-whale { background: var(--gold); color: black; box-shadow: 0 0 5px var(--gold); }
+.role-highroller { background: #9b59b6; color: white; }
+.role-member { background: #555; color: white; }
+
 .game-container { flex: 1; padding: 20px; overflow-y: auto; }
+.btn-small { padding: 6px 12px !important; font-size: 10px !important; width: auto !important; height: auto !important; }
 
-/* GIVEAWAY UI */
-#gw-bar { background: linear-gradient(90deg, #1a1d27, #242834); border: 1px solid var(--accent); margin-bottom: 15px; padding: 15px; border-radius: 10px; display: none; align-items: center; justify-content: space-between; }
-
-/* LEADERBOARD UI */
-.lb-tabs { display: flex; gap: 10px; margin-bottom: 15px; background: var(--bg-panel); padding: 5px; border-radius: 8px; border: 1px solid var(--border-color); }
-.lb-tab { flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 11px; font-weight: bold; border-radius: 5px; }
-.lb-tab.active { background: var(--bg-card); color: var(--accent); }
-.lb-list { font-size: 12px; }
-.lb-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid var(--border-color); }
-
-/* MATCH CARDS */
 .match-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
 .match-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; position: relative; }
 .match-items { display: flex; gap: 5px; margin: 10px 0; overflow-x: auto; }
 .match-items img { width: 35px; height: 35px; background: var(--bg-card); border-radius: 5px; padding: 3px; border: 1px solid var(--border-color); }
-.cancel-btn { width: 100%; background: #351a1a; color: var(--red); border: 1px solid #4a1f1f; padding: 6px; border-radius: 5px; cursor: pointer; font-size: 10px; margin-top: 8px; }
 
-/* CHAT */
 .side-chat { width: 300px; background: var(--bg-panel); border-left: 2px solid var(--border-color); display: flex; flex-direction: column; }
 #chat-msgs { flex: 1; overflow-y: auto; padding: 15px; font-size: 12px; }
-.role-badge { font-size: 8px; padding: 2px 4px; border-radius: 3px; font-weight: 800; margin-right: 5px; text-transform: uppercase; }
-.role-owner { background: var(--red); color: white; }
-.role-user { background: #444; color: white; }
 
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-.box { background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 450px; border: 1px solid var(--border-color); }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+.box { background: var(--bg-panel); padding: 25px; border-radius: 12px; width: 450px; border: 1px solid var(--border-color); position: relative; }
 
-/* ADMIN PANEL */
-#admin-panel { position: fixed; bottom: 80px; right: 320px; background: var(--bg-panel); border: 2px solid var(--red); padding: 15px; border-radius: 12px; z-index: 10000; display: none; width: 280px; }
-.admin-badge { position: fixed; bottom: 20px; right: 320px; background: var(--red); color: white; padding: 12px; border-radius: 50%; cursor: pointer; z-index: 10001; font-weight: bold; display: none; }
+.lb-tab { padding: 8px 15px; border: none; background: var(--bg-card); color: var(--text-muted); cursor: pointer; font-size: 11px; font-weight: bold; border-radius: 6px; transition: 0.2s; }
+.lb-tab:hover { background: #2d3241; }
+.lb-tab.active { color: var(--accent); border: 1px solid var(--accent); }
+
+#admin-panel { position: fixed; bottom: 80px; right: 320px; background: var(--bg-panel); border: 2px solid var(--red); padding: 15px; border-radius: 12px; z-index: 10001; display: none; width: 280px; }
+.admin-badge { position: fixed; bottom: 20px; right: 320px; background: var(--red); color: white; padding: 12px; border-radius: 50%; cursor: pointer; z-index: 10002; font-weight: bold; display: none; }
+
+.inv-item { background: var(--bg-card); padding: 8px; border-radius: 8px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+.inv-item.selected { border-color: var(--accent) !important; background: #1a2a1f !important; }
 </style>
 </head>
 <body>
 
 <div id="admin-panel">
-    <h4 style="color:var(--red); margin-bottom:10px">ELITE ADMIN</h4>
-    <input type="text" id="adm-target" placeholder="Target Username" style="width:100%; margin-bottom:5px; padding:8px; background:#000; color:#fff; border:1px solid #333">
-    <select id="adm-item" style="width:100%; margin-bottom:10px; padding:8px; background:#000; color:#fff; border:1px solid #333"></select>
-    <div style="display:flex; gap:5px; margin-bottom:10px">
-        <button class="lb-tab" style="background:var(--accent); color:white" onclick="adminAction('add')">GIVE</button>
-        <button class="lb-tab" style="background:var(--red); color:white" onclick="adminAction('ban')">BAN</button>
-    </div>
-    <hr style="border-color:#333; margin:10px 0">
-    <label style="font-size:10px">GW Dakika:</label>
-    <input type="number" id="gw-time" value="5" style="width:50px; background:#000; color:#fff; border:1px solid #333">
-    <button class="lb-tab" style="background:var(--gold); color:#000" onclick="startGW()">START GIVEAWAY</button>
+    <h4 style="color:var(--red); margin-bottom:10px">ADMIN PANEL</h4>
+    <input type="text" id="adm-target" placeholder="Target User" style="width:100%; margin-bottom:8px; padding:8px; background:#000; color:#fff; border:1px solid #333">
+    <select id="adm-item" style="width:100%; margin-bottom:12px; padding:8px; background:#000; color:#fff; border:1px solid #333"></select>
+    <button class="lb-tab" style="width:100%; background:var(--accent); color:white; margin-bottom:5px" onclick="adminAction('add')">GIVE ITEM</button>
 </div>
 <div class="admin-badge" id="adm-btn" onclick="toggleAdmin()">ADM</div>
 
 <div class="main-content">
     <div class="top-nav">
         <div class="logo">BLOX<span>FINE</span></div>
-        <div style="display:flex; gap:10px">
-            <button class="lb-tab" style="background:var(--bg-card)" onclick="openLeaderboard()">Leaderboard</button>
-            <button class="lb-tab" style="background:var(--bg-card)" onclick="openMyInventory()">Inventory</button>
-            <div class="user-box" style="background:var(--bg-card); padding:8px 12px; border-radius:8px; font-size:12px">
+        <div style="display:flex; gap:10px; align-items:center">
+            <button class="lb-tab" onclick="openLeaderboard()">Leaderboard</button>
+            <button class="lb-tab" onclick="openMyInventory()">Inventory</button>
+            <div class="user-box" style="background:var(--bg-card); padding:8px 15px; border-radius:8px; font-size:12px; border:1px solid var(--border-color)">
                 <span id="u-name" style="font-weight:bold">...</span> | <span style="color:var(--gold)">💰 <span id="u-val">0</span></span>
             </div>
         </div>
@@ -94,24 +85,12 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
     <div class="stats-bar">
         <span>GAMES: <b id="stat-games">0</b></span>
         <span>VALUE: <b id="stat-val">0</b></span>
-        <span>ITEMS: <b id="stat-items">0</b></span>
     </div>
 
     <div class="game-container">
-        <div id="gw-bar">
-            <div>
-                <h4 id="gw-title" style="color:var(--gold)">GIVEAWAY!</h4>
-                <p id="gw-info" style="font-size:11px"></p>
-            </div>
-            <div style="display:flex; gap:10px; align-items:center">
-                <span id="gw-timer" style="font-family:monospace; font-weight:bold">00:00</span>
-                <button id="gw-join-btn" class="lb-tab" style="background:var(--accent); color:white; width:80px" onclick="joinGW()">JOIN</button>
-            </div>
-        </div>
-
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-            <h3>Active Coinflips</h3>
-            <button class="lb-tab" style="background:var(--accent); color:white; width:120px" onclick="openInvForCreate()">+ Create</button>
+            <h3>Active Flips</h3>
+            <button class="lb-tab btn-small" style="background:var(--accent); color:white" onclick="openInvForCreate()">+ CREATE MATCH</button>
         </div>
         <div id="match-list" class="match-list"></div>
     </div>
@@ -120,32 +99,22 @@ body { background: var(--bg-main); color: var(--text-main); display: flex; heigh
 <div class="side-chat">
     <div id="chat-msgs"></div>
     <div style="padding:15px; border-top:1px solid var(--border-color)">
-        <input type="text" id="chat-input" placeholder="Message..." style="width:100%; background:var(--bg-main); border:1px solid var(--border-color); padding:10px; color:#fff; border-radius:6px" onkeypress="if(event.key==='Enter') sendMsg()">
-    </div>
-</div>
-
-<div id="lb-modal" class="modal-overlay">
-    <div class="box">
-        <div class="lb-tabs">
-            <button class="lb-tab active" id="tab-wager" onclick="switchLB('wager')">TOP WAGER</button>
-            <button class="lb-tab" id="tab-profit" onclick="switchLB('profit')">TOP PROFIT</button>
-        </div>
-        <div id="lb-content" class="lb-list"></div>
-        <button onclick="document.getElementById('lb-modal').style.display='none'" style="width:100%; margin-top:15px; background:none; border:none; color:var(--text-muted); cursor:pointer">Close</button>
+        <input type="text" id="chat-input" placeholder="Say something..." style="width:100%; background:var(--bg-main); border:1px solid var(--border-color); padding:10px; color:#fff; border-radius:6px" onkeypress="if(event.key==='Enter') sendMsg()">
     </div>
 </div>
 
 <div id="inv-modal" class="modal-overlay">
     <div class="box">
-        <h3 id="modal-title" style="margin-bottom:10px">Inventory</h3>
-        <p id="val-info" style="color:var(--gold); font-weight:bold; margin-bottom:10px">0 Value</p>
-        <div id="side-select-div" style="display:flex; gap:10px; margin-bottom:10px">
-            <button class="lb-tab" id="btn-h" style="background:var(--blue); color:white" onclick="selectSide('H')">HEADS</button>
-            <button class="lb-tab" id="btn-t" style="background:var(--bg-card)" onclick="selectSide('T')">TAILS</button>
+        <h3 id="modal-title" style="margin-bottom:15px">Inventory</h3>
+        <div id="side-select-div" style="display:flex; gap:10px; margin-bottom:15px">
+            <button class="lb-tab" id="btn-h" style="flex:1; background:var(--blue); color:white" onclick="selectSide('H')">HEADS</button>
+            <button class="lb-tab" id="btn-t" style="flex:1" onclick="selectSide('T')">TAILS</button>
         </div>
-        <div class="grid" id="inventory-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; max-height:250px; overflow-y:auto"></div>
-        <button class="lb-tab" id="confirm-btn" style="width:100%; margin-top:15px; background:var(--accent); color:white" onclick="handleConfirm()">CONFIRM</button>
-        <button onclick="closeInv()" style="width:100%; margin-top:10px; background:none; border:none; color:var(--text-muted); cursor:pointer">Cancel</button>
+        <div id="inventory-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-height:300px; overflow-y:auto; padding:5px"></div>
+        <div style="margin-top:15px; display:flex; flex-direction:column; gap:8px">
+            <button class="lb-tab" id="confirm-btn" style="background:var(--accent); color:white" onclick="handleConfirm()">CONFIRM</button>
+            <button class="lb-tab" onclick="closeInv()" style="background:transparent; border:none">CANCEL</button>
+        </div>
     </div>
 </div>
 
@@ -156,154 +125,117 @@ const ITEMS_DB = [
     {n: "Traveler's Axe", v: 7600, img: "https://supremevalues.com/media/mm2ancients/Traveler's_Axe.png"},
     {n: "Traveler's Gun", v: 4100, img: "https://supremevalues.com/media/mm2ancients/Traveler's_Gun.png"},
     {n: "Harvester", v: 425, img: "https://supremevalues.com/media/mm2ancients/Harvester.png"},
-    {n: "Icepiercer", v: 350, img: "https://supremevalues.com/media/mm2ancients/Icepiercer.png"},
-    {n: "Celestial", v: 1800, img: "https://supremevalues.com/media/mm2ancients/Celestial.png"}
+    {n: "Icepiercer", v: 350, img: "https://supremevalues.com/media/mm2ancients/Icepiercer.png"}
 ];
 
 let user = localStorage.getItem('rbx_user') || "";
-let myInventory = JSON.parse(localStorage.getItem('rbx_inv_list')) || [0,1,2,3,4,5];
-let lbData = { wager: {}, profit: {} };
-let activeGW = null;
+let myInventory = JSON.parse(localStorage.getItem('rbx_inv_list')) || [0,1,2,3,4];
+let selectedIndices = []; let selectedSide = 'H'; let joinId = null;
 
 const pubnub = new PubNub({ publishKey: "pub-c-134bcaab-4830-4bbb-afb4-b7595ffffebe", subscribeKey: "sub-c-5f27998e-cff7-4c72-9ad1-455b7adeb737", uuid: user || "guest" });
-const CHANNEL = "BLOXY_ELITE_V9";
+const CHANNEL = "BLOXY_ELITE_V15";
 pubnub.subscribe({ channels: [CHANNEL] });
 
 pubnub.addListener({
     message: (m) => {
         const d = m.message;
-        if(d.type === 'chat') receiveChat(d.u, d.t);
+        if(d.type === 'chat') receiveChat(d.u, d.t, d.val);
         if(d.type === 'new') addMatchToUI(d.user, d.id, d.items, d.side, d.totalV);
-        if(d.type === 'roll') { 
-            handleLBUpdate(d); // Gerçek bahisleri listeye ekle
-            document.getElementById(d.id)?.remove(); 
-            if(user === d.creator || user === d.joiner) { myInventory.push(...(d.res === d.cSide ? d.cItems : d.jItems)); updateUI(); }
-        }
-        if(d.type === 'gw_start') { showGW(d); }
-        if(d.type === 'gw_end' && d.winner === user) { myInventory.push(d.itemIdx); updateUI(); alert("GIVEAWAY WON!"); }
-        if(d.type === 'admin' && d.target === user && d.cmd === 'add') { myInventory.push(d.item); updateUI(); }
+        if(d.type === 'cancel') document.getElementById(d.id)?.remove();
+        if(d.type === 'admin' && d.target === user) { myInventory.push(d.item); updateUI(); }
     }
 });
 
-// LEADERBOARD LOGIC (Sadece gerçek oyuncular)
-function handleLBUpdate(d) {
-    const winner = (d.res === d.cSide) ? d.creator : d.joiner;
-    const loser = (winner === d.creator) ? d.joiner : d.creator;
-    const val = d.cItems.reduce((s,i)=>s+ITEMS_DB[i].v, 0);
-
-    [d.creator, d.joiner].forEach(u => {
-        lbData.wager[u] = (lbData.wager[u] || 0) + val;
-    });
-    lbData.profit[winner] = (lbData.profit[winner] || 0) + val;
-    lbData.profit[loser] = (lbData.profit[loser] || 0) - val;
+function getRole(username, value) {
+    if(username === OWNER_NAME) return { n: "OWNER", c: "role-owner" };
+    if(value >= 1000000) return { n: "WHALE", c: "role-whale" };
+    if(value >= 100000) return { n: "HIGHROLLER", c: "role-highroller" };
+    return { n: "MEMBER", c: "role-member" };
 }
 
-function openLeaderboard() {
-    document.getElementById('lb-modal').style.display = 'flex';
-    switchLB('wager');
+function receiveChat(u, t, val = 0) {
+    const box = document.getElementById('chat-msgs');
+    const role = getRole(u, val);
+    const div = document.createElement('div');
+    div.style.marginBottom = "8px";
+    div.innerHTML = `<span class="role-badge ${role.c}">${role.n}</span><b style="color:#eee">${u}:</b> <span style="color:var(--text-muted)">${t}</span>`;
+    box.appendChild(div); box.scrollTop = box.scrollHeight;
 }
 
-function switchLB(type) {
-    document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('tab-'+type).classList.add('active');
-    const cont = document.getElementById('lb-content');
-    
-    let sorted = Object.entries(lbData[type])
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 10);
-
-    cont.innerHTML = sorted.length ? sorted.map(([u, v], i) => `
-        <div class="lb-row">
-            <span>#${i+1} ${u}</span>
-            <b style="color:${v>=0?'var(--accent)':'var(--red)'}">${v.toLocaleString()}</b>
-        </div>
-    `).join('') : "<p style='text-align:center; padding:20px; color:var(--text-muted)'>No data yet.</p>";
+function sendMsg() {
+    const i = document.getElementById('chat-input');
+    if(!i.value.trim()) return;
+    const totalVal = myInventory.reduce((a,b)=>a+ITEMS_DB[b].v, 0);
+    pubnub.publish({ channel: CHANNEL, message: { type: 'chat', u: user, t: i.value, val: totalVal } });
+    i.value = "";
 }
 
-// GIVEAWAY LOGIC
-function startGW() {
-    const itemIdx = parseInt(document.getElementById('adm-item').value);
-    const mins = parseInt(document.getElementById('gw-time').value);
-    const endTime = Date.now() + (mins * 60000);
-    pubnub.publish({ channel: CHANNEL, message: { type: 'gw_start', itemIdx, endTime, host: user }});
+function openInvForCreate() {
+    joinId = null;
+    document.getElementById('modal-title').innerText = "Create Match";
+    document.getElementById('side-select-div').style.display = "flex";
+    document.getElementById('confirm-btn').style.display = "block";
+    renderInventory(false);
 }
-
-function showGW(d) {
-    activeGW = d;
-    activeGW.participants = [];
-    document.getElementById('gw-bar').style.display = 'flex';
-    document.getElementById('gw-info').innerText = `${ITEMS_DB[d.itemIdx].n} by ${d.host}`;
-    
-    const timer = setInterval(() => {
-        const remains = d.endTime - Date.now();
-        if(remains <= 0) {
-            clearInterval(timer);
-            document.getElementById('gw-bar').style.display = 'none';
-            if(user === d.host) {
-                const winner = activeGW.participants[Math.floor(Math.random() * activeGW.participants.length)] || "None";
-                pubnub.publish({ channel: CHANNEL, message: { type: 'gw_end', winner, itemIdx: d.itemIdx }});
-                pubnub.publish({ channel: CHANNEL, message: { type: 'chat', u: "SYSTEM", t: `Giveaway Winner: ${winner}!` }});
-            }
-        } else {
-            const m = Math.floor(remains/60000);
-            const s = Math.floor((remains%60000)/1000);
-            document.getElementById('gw-timer').innerText = `${m}:${s<10?'0':''}${s}`;
-        }
-    }, 1000);
-}
-
-function joinGW() {
-    if(!activeGW) return;
-    pubnub.publish({ channel: CHANNEL, message: { type: 'chat', u: "SYSTEM", t: `${user} joined the giveaway.` }});
-    activeGW.participants.push(user);
-    document.getElementById('gw-join-btn').innerText = "JOINED";
-    document.getElementById('gw-join-btn').disabled = true;
-}
-
-// MİRAS FONKSİYONLAR (Elite Edition'dan dokunulmadan alındı)
-function addMatchToUI(owner, id, items, side, totalV) {
-    if(document.getElementById(id)) return;
-    const div = document.createElement('div'); div.className = "match-card"; div.id = id;
-    div.dataset.totalValue = totalV; div.dataset.items = JSON.stringify(items);
-    div.innerHTML = `
-        <div class="match-header"><b>${owner}</b> <span style="color:var(--gold)">${totalV.toLocaleString()}</span></div>
-        <div class="match-items">${items.map(idx => `<img src="${ITEMS_DB[idx].img}">`).join('')}</div>
-        <button class="lb-tab" style="width:100%; background:var(--accent); color:white" onclick="openInvForJoin('${id}')">${owner===user?'WAITING...':'JOIN'}</button>
-    `;
-    document.getElementById('match-list').prepend(div);
-}
-
-function openInvForCreate() { document.getElementById('modal-title').innerText = "Create Match"; document.getElementById('side-select-div').style.display = "flex"; document.getElementById('confirm-btn').style.display = "block"; renderInventory(false); }
-function openMyInventory() { document.getElementById('modal-title').innerText = "Inventory"; document.getElementById('side-select-div').style.display = "none"; document.getElementById('confirm-btn').style.display = "none"; renderInventory(true); }
-function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
-function toggleAdmin() { document.getElementById('admin-panel').style.display = document.getElementById('admin-panel').style.display === "block" ? "none" : "block"; }
 
 function renderInventory(isView) {
-    const grid = document.getElementById('inventory-grid'); grid.innerHTML = "";
-    selectedIndices = [];
+    const grid = document.getElementById('inventory-grid');
+    grid.innerHTML = ""; selectedIndices = [];
     myInventory.forEach((idx, aIdx) => {
-        const div = document.createElement('div'); div.className = "inv-item";
-        div.innerHTML = `<img src="${ITEMS_DB[idx].img}" width="35"><br><small>${ITEMS_DB[idx].v}</small>`;
-        div.style = "background:var(--bg-card); padding:8px; border-radius:8px; text-align:center; cursor:pointer; border:2px solid transparent";
-        if(!isView) div.onclick = () => { div.classList.toggle('selected'); if(selectedIndices.includes(aIdx)) selectedIndices = selectedIndices.filter(i=>i!==aIdx); else selectedIndices.push(aIdx); };
-        grid.appendChild(div);
+        const item = document.createElement('div');
+        item.className = "inv-item";
+        item.innerHTML = `<img src="${ITEMS_DB[idx].img}" width="35"><br><small style="color:var(--gold)">${ITEMS_DB[idx].v}</small>`;
+        if(!isView) {
+            item.onclick = (e) => {
+                e.stopPropagation();
+                if(item.classList.toggle('selected')) selectedIndices.push(aIdx);
+                else selectedIndices = selectedIndices.filter(i => i !== aIdx);
+            };
+        }
+        grid.appendChild(item);
     });
     document.getElementById('inv-modal').style.display = "flex";
 }
 
+function selectSide(s) {
+    selectedSide = s;
+    document.getElementById('btn-h').style.background = s === 'H' ? 'var(--blue)' : 'var(--bg-card)';
+    document.getElementById('btn-t').style.background = s === 'T' ? 'var(--red)' : 'var(--bg-card)';
+}
+
 function handleConfirm() {
+    if(selectedIndices.length === 0) return alert("Select items!");
     const items = selectedIndices.map(i => myInventory[i]);
     const totalV = items.reduce((s, idx) => s + ITEMS_DB[idx].v, 0);
-    const id = "M_"+Math.random().toString(36).substr(2,8);
-    pubnub.publish({ channel: CHANNEL, message: { type: 'new', user: user, id, items, side: selectedSide, totalV }});
+    const id = "M_" + Math.random().toString(36).substr(2, 8);
+    
+    pubnub.publish({ channel: CHANNEL, message: { type: 'new', user: user, id, items, side: selectedSide, totalV } });
+    
     selectedIndices.sort((a,b)=>b-a).forEach(i => myInventory.splice(i,1));
     updateUI(); closeInv();
+}
+
+function addMatchToUI(owner, id, items, side, totalV) {
+    if(document.getElementById(id)) return;
+    const div = document.createElement('div'); div.className = "match-card"; div.id = id;
+    div.innerHTML = `
+        <div style="display:flex; justify-content:space-between"><b>${owner}</b> <span style="color:var(--gold)">${totalV.toLocaleString()}</span></div>
+        <div class="match-items">${items.map(idx => `<img src="${ITEMS_DB[idx].img}">`).join('')}</div>
+        <button class="lb-tab" style="width:100%; background:var(--accent); color:white">${owner===user?'WAITING...':'JOIN MATCH'}</button>
+        ${owner===user?`<button class="lb-tab" style="width:100%; margin-top:5px; background:#331a1a; color:var(--red)" onclick="cancelMatch('${id}','${JSON.stringify(items)}')">CANCEL</button>`:''}
+    `;
+    document.getElementById('match-list').prepend(div);
+}
+
+function cancelMatch(id, its) {
+    pubnub.publish({ channel: CHANNEL, message: { type: 'cancel', id } });
+    myInventory.push(...JSON.parse(its)); updateUI();
 }
 
 function updateUI() {
     if(!user) return;
     document.getElementById('u-name').innerText = user;
-    document.getElementById('u-val').innerText = myInventory.reduce((a, b) => a + ITEMS_DB[b].v, 0).toLocaleString();
+    document.getElementById('u-val').innerText = myInventory.reduce((a,b)=>a+ITEMS_DB[b].v, 0).toLocaleString();
     localStorage.setItem('rbx_inv_list', JSON.stringify(myInventory));
     if(user === OWNER_NAME) {
         document.getElementById('adm-btn').style.display = "block";
@@ -311,35 +243,25 @@ function updateUI() {
     }
 }
 
-function receiveChat(u, t) {
-    const box = document.getElementById('chat-msgs');
-    const div = document.createElement('div');
-    div.innerHTML = `<b>${u}:</b> ${t}`;
-    box.appendChild(div); box.scrollTop = box.scrollHeight;
-}
+function toggleAdmin() { document.getElementById('admin-panel').style.display = document.getElementById('admin-panel').style.display === "block" ? "none" : "block"; }
+function closeInv() { document.getElementById('inv-modal').style.display = "none"; }
+function openMyInventory() { document.getElementById('modal-title').innerText = "My Inventory"; document.getElementById('side-select-div').style.display = "none"; document.getElementById('confirm-btn').style.display = "none"; renderInventory(true); }
+function openLeaderboard() { alert("Leaderboard updating..."); }
 
-function sendMsg() {
-    const i = document.getElementById('chat-input');
-    pubnub.publish({ channel: CHANNEL, message: { type: 'chat', u: user, t: i.value } });
-    i.value = "";
-}
-
-window.onload = () => { 
-    if(!user) {
-        user = prompt("Username?");
-        if(user) { localStorage.setItem('rbx_user', user); location.reload(); }
-    } else {
-        updateUI();
-        // Geçmişi tara ve Leaderboard verisini topla
-        pubnub.history({ channel: CHANNEL, count: 100 }, (s, r) => {
-            r?.messages?.forEach(m => {
-                const d = m.entry;
-                if(d.type === 'new') addMatchToUI(d.user, d.id, d.items, d.side, d.totalV);
-                if(d.type === 'roll') handleLBUpdate(d);
-            });
+window.onload = () => {
+    if(!user) { user = prompt("Roblox Username?"); if(user) { localStorage.setItem('rbx_user', user); location.reload(); } }
+    updateUI();
+    pubnub.history({ channel: CHANNEL, count: 50 }, (s, r) => {
+        let ms = new Map();
+        r?.messages?.forEach(m => {
+            const d = m.entry;
+            if(d.type === 'chat') receiveChat(d.u, d.t, d.val);
+            if(d.type === 'new') ms.set(d.id, d);
+            if(d.type === 'cancel') ms.delete(d.id);
         });
-    }
-};
+        ms.forEach(d => addMatchToUI(d.user, d.id, d.items, d.side, d.totalV));
+    });
+}
 </script>
 </body>
 </html>
